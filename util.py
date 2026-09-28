@@ -12,9 +12,8 @@ def to_x_y_w(pred, y, w):
     pred = to_2d_array(pred)
     y = to_2d_array(y)
     w = to_2d_array(w)
-    w = np.nan_to_num(w, True, 0.0)
-    w = np.clip(w, min=0)
     constant = np.ones(len(pred))[:, None]
     x = np.hstack([constant, pred])
+    mask = np.isfinite(x).all(axis=1) & np.isfinite(y).all(axis=1) & np.isfinite(w).all(axis=1) & (w >= 0).all(axis=1)
 
-    return x, y, w
+    return x[mask], y[mask], w[mask]
