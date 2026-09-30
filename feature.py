@@ -80,8 +80,6 @@ def enrich_calendar_features(df: pd.DataFrame) -> pd.DataFrame:
             | ((cal.month == 7) & (cal.day == 3))
     )
 
-    f = f.shift(-1).add_prefix("next_")
-
     feats = f.reindex(d).replace(np.nan, False).astype(int)
     feats.index = df.index
     return feats
