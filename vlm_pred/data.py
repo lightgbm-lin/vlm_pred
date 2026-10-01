@@ -1,7 +1,7 @@
 import os
 import pandas as pd
 
-from vlm_pred.config import DATA_FILENAME, OOS_CUTOFF
+from vlm_pred.config import DATA_FILENAME, OOS_CUTOFF, VAL_CUTOFF
 from vlm_pred.util import calc_ewm
 
 
@@ -18,18 +18,20 @@ def load_data_df():
     return df
 
 
-def ins_oos_split(df: pd.DataFrame):
-    ins_df = df[df.index.get_level_values('date') <= OOS_CUTOFF].copy()
-    oos_df = df[df.index.get_level_values('date') > OOS_CUTOFF].copy()
+def train_test_split(df: pd.DataFrame):
+    dates = df.index.get_level_values('date')
 
-    return ins_df, oos_df
+    train_df = df[dates <= VAL_CUTOFF].copy()
+    val_df = df[(dates > VAL_CUTOFF) & (dates <= OOS_CUTOFF)].copy()
+    oos_df = df[dates > OOS_CUTOFF].copy()
+
+    return train_df, val_df, oos_df
 
 
 def main():
     data_df = load_data_df()
-    ins_df, oos_df = ins_oos_split(data_df)
-    print(f"found ins_df {ins_df.shape}")
-    print(f"found oos_df {oos_df.shape}")
+    train_df, val_df, oos_df = train_test_split(data_df)
+    print(f"found train_df: {train_df.shape}, val_df: {val_df.shape}, oos_df: {oos_df.shape}")
 
 
 if __name__ == '__main__':
