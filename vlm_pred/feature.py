@@ -1,10 +1,10 @@
 import pandas as pd
 import numpy as np
-from data import calc_vlm_ewma
+from vlm_pred.util import calc_ewm
 
 
 def enrich_vlm_ratio(df: pd.DataFrame, hls: list[int]) -> pd.DataFrame:
-    vlm_ewm = pd.concat([calc_vlm_ewma(df, halflife=hl) for hl in hls], axis=1)
+    vlm_ewm = pd.concat([calc_ewm(df, halflife=hl, column='volume') for hl in hls], axis=1)
     vlm_pred_naive = df['vlm_pred_naive'].mask(df['vlm_pred_naive']<=0)
 
     vlm_ratio = vlm_ewm.divide(vlm_pred_naive, axis=0) - 1

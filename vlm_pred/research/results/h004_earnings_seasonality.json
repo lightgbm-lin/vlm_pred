@@ -1,0 +1,119 @@
+{
+  "candidate": "h004_earnings_seasonality",
+  "hypothesis": "H004: A volume spike ~1 quarter or ~1 year before T predicts a spike at T (earnings seasonality).\n\nMechanism: earnings announcements are the largest recurring idiosyncratic volume events and are\nspaced ~63 trading days apart; firms report in nearly the same calendar week each year, so the\n~252-day echo is the most precise, the ~63-day echo the most recent. Neither the EWMA ratios nor the\ncalendar features can anticipate a stock-specific scheduled event.\nExpected: large y around t-63 / t-252 -> higher y_t; the tight (+-1 day) window sharper than the wide\n(+-6 day) window, which captures drift in the reporting date.",
+  "new_columns": [
+    "h004_y_q_tight",
+    "h004_y_q_wide",
+    "h004_y_yr_tight",
+    "h004_y_yr_wide"
+  ],
+  "coverage": {
+    "h004_y_q_tight": 0.9813,
+    "h004_y_q_wide": 0.9828,
+    "h004_y_yr_tight": 0.9257,
+    "h004_y_yr_wide": 0.9275
+  },
+  "leakage": "passed",
+  "base_features": [
+    "vlm_1_ratio",
+    "h001_vlm_5_ratio",
+    "h001_vlm_21_ratio",
+    "h002_opex",
+    "h002_russell",
+    "h002_half_day",
+    "h002_holiday_adj",
+    "h002_month_end",
+    "h002_dow",
+    "h002_prev_special"
+  ],
+  "base_r2": 0.2603402283836972,
+  "cand_r2": 0.26582914163160076,
+  "delta_r2": 0.005488913247903571,
+  "cand_tstat": 721.8317613760719,
+  "years_improved": "12/13",
+  "by_year": {
+    "2002": {
+      "base": 0.25547097487035997,
+      "cand": 0.25758625302588334,
+      "delta": 0.00211527815552337
+    },
+    "2003": {
+      "base": 0.199165214622691,
+      "cand": 0.19844225581074437,
+      "delta": -0.0007229588119466168
+    },
+    "2004": {
+      "base": 0.21172013067832773,
+      "cand": 0.21437390088112296,
+      "delta": 0.002653770202795225
+    },
+    "2005": {
+      "base": 0.20814734120520306,
+      "cand": 0.21500902407265965,
+      "delta": 0.006861682867456587
+    },
+    "2006": {
+      "base": 0.20718056783154337,
+      "cand": 0.21584888018973092,
+      "delta": 0.008668312358187547
+    },
+    "2007": {
+      "base": 0.2737492177555165,
+      "cand": 0.27815108939976707,
+      "delta": 0.0044018716442505434
+    },
+    "2008": {
+      "base": 0.3484557183917564,
+      "cand": 0.3485004678169864,
+      "delta": 4.474942523002845e-05
+    },
+    "2009": {
+      "base": 0.32776180562760493,
+      "cand": 0.3352791737865568,
+      "delta": 0.007517368158951876
+    },
+    "2010": {
+      "base": 0.27588201907846466,
+      "cand": 0.2833845020423257,
+      "delta": 0.0075024829638610235
+    },
+    "2011": {
+      "base": 0.26645584946132883,
+      "cand": 0.2780339723869285,
+      "delta": 0.011578122925599676
+    },
+    "2012": {
+      "base": 0.22289967206229533,
+      "cand": 0.2261261105882968,
+      "delta": 0.0032264385260014627
+    },
+    "2013": {
+      "base": 0.2284944085369377,
+      "cand": 0.234217384482161,
+      "delta": 0.0057229759452233075
+    },
+    "2014": {
+      "base": 0.28869649438203693,
+      "cand": 0.30045391696028867,
+      "delta": 0.011757422578251742
+    }
+  },
+  "gain_share": {
+    "vlm_1_ratio": 0.777,
+    "h002_half_day": 0.0655,
+    "h002_dow": 0.0354,
+    "h002_opex": 0.0191,
+    "h004_y_q_tight": 0.017,
+    "h004_y_yr_tight": 0.0144,
+    "h001_vlm_21_ratio": 0.0131,
+    "h001_vlm_5_ratio": 0.0116,
+    "h002_holiday_adj": 0.0114,
+    "h004_y_q_wide": 0.0108,
+    "h004_y_yr_wide": 0.0091,
+    "h002_prev_special": 0.0084,
+    "h002_month_end": 0.0052,
+    "h002_russell": 0.002
+  },
+  "suggested_decision": "ACCEPT",
+  "rule": "no leakage, delta_r2 >= 0.0005, years improved >= 67%"
+}

@@ -1,6 +1,6 @@
 import pandas as pd
-from data import load_data_df, ins_oos_split
-from feature import enrich_vlm_ratio, enrich_vol_ewm, enrich_lagged_ret, enrich_calendar_features, \
+from vlm_pred.data import load_data_df, ins_oos_split
+from vlm_pred.feature import enrich_vlm_ratio, enrich_vol_ewm, enrich_lagged_ret, enrich_calendar_features, \
     enrich_lagged_targets, enrich_max_targets
 
 

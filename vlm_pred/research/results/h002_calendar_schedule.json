@@ -1,0 +1,114 @@
+{
+  "candidate": "h002_calendar_schedule",
+  "hypothesis": "H002: Scheduled calendar events on T (and whether T-1 was a distorted session) predict y.\n\nMechanism: several days have volume set by the trading schedule rather than by information flow.\nOption expiry / quad witching (hedge unwinds, S&P quarterly rebalance) and the Russell reconstitution\nconcentrate index/derivative flows into the close; half days and holiday-adjacent days have short\nsessions or thin participation; turn of month brings fund flows; Mondays are quiet. The EWMA\nfeatures cannot anticipate these, and when T-1 was such a day its volume distorts vlm_1_ratio in a\nway that does not persist into T.\nExpected: quad witch >> opex > normal; Russell recon > normal; half day << pre/post-holiday < normal;\nmonth-end slightly >; Monday <. After a special T-1 session, vlm_1_ratio should be discounted.",
+  "new_columns": [
+    "h002_opex",
+    "h002_russell",
+    "h002_half_day",
+    "h002_holiday_adj",
+    "h002_month_end",
+    "h002_dow",
+    "h002_prev_special"
+  ],
+  "coverage": {
+    "h002_opex": 1.0,
+    "h002_russell": 1.0,
+    "h002_half_day": 1.0,
+    "h002_holiday_adj": 1.0,
+    "h002_month_end": 1.0,
+    "h002_dow": 1.0,
+    "h002_prev_special": 0.9998
+  },
+  "leakage": "passed",
+  "base_features": [
+    "vlm_1_ratio",
+    "h001_vlm_5_ratio",
+    "h001_vlm_21_ratio"
+  ],
+  "base_r2": 0.23257177785564387,
+  "cand_r2": 0.2603402283836972,
+  "delta_r2": 0.027768450528053323,
+  "cand_tstat": 711.6851522028605,
+  "years_improved": "13/13",
+  "by_year": {
+    "2002": {
+      "base": 0.23924888309210557,
+      "cand": 0.25547097487035997,
+      "delta": 0.0162220917782544
+    },
+    "2003": {
+      "base": 0.18213119539479838,
+      "cand": 0.199165214622691,
+      "delta": 0.017034019227892605
+    },
+    "2004": {
+      "base": 0.19995712487531048,
+      "cand": 0.21172013067832773,
+      "delta": 0.011763005803017257
+    },
+    "2005": {
+      "base": 0.18054583112380174,
+      "cand": 0.20814734120520306,
+      "delta": 0.027601510081401326
+    },
+    "2006": {
+      "base": 0.18069305285781123,
+      "cand": 0.20718056783154326,
+      "delta": 0.02648751497373203
+    },
+    "2007": {
+      "base": 0.23906452832821945,
+      "cand": 0.27374921775551664,
+      "delta": 0.03468468942729719
+    },
+    "2008": {
+      "base": 0.31732911510818573,
+      "cand": 0.3484557183917565,
+      "delta": 0.031126603283570753
+    },
+    "2009": {
+      "base": 0.30657198955887843,
+      "cand": 0.32776180562760493,
+      "delta": 0.021189816068726497
+    },
+    "2010": {
+      "base": 0.2502613461729315,
+      "cand": 0.27588201907846466,
+      "delta": 0.02562067290553316
+    },
+    "2011": {
+      "base": 0.24322979486518537,
+      "cand": 0.2664558494613295,
+      "delta": 0.02322605459614413
+    },
+    "2012": {
+      "base": 0.17870146471045567,
+      "cand": 0.22289967206229533,
+      "delta": 0.04419820735183966
+    },
+    "2013": {
+      "base": 0.18089072816563545,
+      "cand": 0.2284944085369377,
+      "delta": 0.04760368037130225
+    },
+    "2014": {
+      "base": 0.24634400680243018,
+      "cand": 0.2886964943820367,
+      "delta": 0.042352487579606524
+    }
+  },
+  "gain_share": {
+    "vlm_1_ratio": 0.8082,
+    "h002_half_day": 0.0679,
+    "h002_dow": 0.0376,
+    "h002_opex": 0.0201,
+    "h001_vlm_21_ratio": 0.019,
+    "h001_vlm_5_ratio": 0.0181,
+    "h002_holiday_adj": 0.0115,
+    "h002_prev_special": 0.0099,
+    "h002_month_end": 0.0055,
+    "h002_russell": 0.0021
+  },
+  "suggested_decision": "ACCEPT",
+  "rule": "no leakage, delta_r2 >= 0.0005, years improved >= 67%"
+}

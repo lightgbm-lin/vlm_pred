@@ -1,5 +1,5 @@
 import statsmodels.api as sm
-from util import to_x_y_w
+from vlm_pred.util import to_x_y_w
 
 
 def evaluate(pred, y, w):
