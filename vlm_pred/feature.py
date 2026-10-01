@@ -1,9 +1,10 @@
 import pandas as pd
 import numpy as np
+from collections.abc import Sequence
 from vlm_pred.util import calc_ewm
 
 
-def enrich_vlm_ratio(df: pd.DataFrame, hls: list[int]) -> pd.DataFrame:
+def enrich_vlm_ratio(df: pd.DataFrame, hls: Sequence[int] = (1, 5, 10, 21)) -> pd.DataFrame:
     vlm_ewm = pd.concat([calc_ewm(df, halflife=hl, column='volume') for hl in hls], axis=1)
     vlm_pred_naive = df['vlm_pred_naive'].mask(df['vlm_pred_naive']<=0)
 
@@ -13,14 +14,14 @@ def enrich_vlm_ratio(df: pd.DataFrame, hls: list[int]) -> pd.DataFrame:
     return vlm_ratio
 
 
-def enrich_vol_ewm(df: pd.DataFrame, hls: list[int]) -> pd.DataFrame:
+def enrich_vol_ewm(df: pd.DataFrame, hls: Sequence[int] = (1, 5, 10, 21)) -> pd.DataFrame:
     vol_ewm_df = pd.concat([df.groupby('uspn')['ret_raw'].transform(lambda x: x.ewm(halflife=hl).std().shift(1)) for hl in hls], axis=1)
     vol_ewm_df.columns = [f'vol_ewm_{hl}' for hl in hls]
 
     return vol_ewm_df
 
 
-def enrich_lagged_ret(df: pd.DataFrame, lags: list[int]) -> pd.DataFrame:
+def enrich_lagged_ret(df: pd.DataFrame, lags: Sequence[int] = (1, 2, 3, 4, 5)) -> pd.DataFrame:
     lagged_rets = pd.concat(
         [df.groupby('uspn')['ret_raw'].shift(lag) for lag in lags], axis=1)
     lagged_rets.columns = [f'ret_{lag}' for lag in lags]
@@ -28,7 +29,7 @@ def enrich_lagged_ret(df: pd.DataFrame, lags: list[int]) -> pd.DataFrame:
     return lagged_rets
 
 
-def enrich_lagged_targets(df: pd.DataFrame, lags: list[int]) -> pd.DataFrame:
+def enrich_lagged_targets(df: pd.DataFrame, lags: Sequence[int] = (1, 2, 3, 4, 5)) -> pd.DataFrame:
     lagged_targets = pd.concat(
         [df.groupby('uspn')['y'].shift(lag) for lag in lags], axis=1)
     lagged_targets.columns = [f'y_{lag}' for lag in lags]
@@ -36,7 +37,7 @@ def enrich_lagged_targets(df: pd.DataFrame, lags: list[int]) -> pd.DataFrame:
     return lagged_targets
 
 
-def enrich_max_targets(df: pd.DataFrame, lags: list[int]) -> pd.DataFrame:
+def enrich_max_targets(df: pd.DataFrame, lags: Sequence[int] = (5, 10, 20)) -> pd.DataFrame:
     max_targets = pd.concat(
         [df.groupby('uspn')['y'].transform(lambda x: x.rolling(lag).max().shift(1)) for lag in lags], axis=1)
     max_targets.columns = [f'max_y_{lag}' for lag in lags]

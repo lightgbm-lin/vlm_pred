@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+import numpy as np
 import pandas as pd
 from sklearn.base import clone
 from sklearn.pipeline import Pipeline
@@ -48,6 +49,7 @@ class WalkForward:
 
     def _fit(self, train: pd.DataFrame):
         train = train.dropna(subset=[self.target] + ([self.weight] if self.weight else []))
+        train = train[np.isfinite(train[self.target])]
         model = clone(self.model)
         kwargs = {}
         if self.weight:

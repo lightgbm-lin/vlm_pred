@@ -1,5 +1,5 @@
 import pandas as pd
-from vlm_pred.data import load_data_df, ins_oos_split
+from vlm_pred.data import load_data_df, train_val_oos_split
 from vlm_pred.feature import enrich_vlm_ratio, enrich_vol_ewm, enrich_lagged_ret, enrich_calendar_features, \
     enrich_lagged_targets, enrich_max_targets
 
@@ -16,6 +16,6 @@ def load_all_data():
 
     full_df = pd.concat([data_df, vlm_ratio_df, vol_ewm_df, lagged_ret_df, max_targets, lagged_targets_df, cal_df], axis=1)
 
-    ins_df, oos_df = ins_oos_split(full_df)
+    ins_df, oos_df = train_val_oos_split(full_df)
 
     return ins_df, oos_df

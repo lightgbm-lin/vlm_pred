@@ -21,7 +21,7 @@ import pandas as pd
 from lightgbm import LGBMRegressor
 
 from vlm_pred.config import ROOT as REPO_ROOT
-from vlm_pred.data import load_data_df, ins_oos_split
+from vlm_pred.data import load_data_df, train_val_oos_split
 from vlm_pred.feature import enrich_vlm_ratio
 from vlm_pred.metric import evaluate
 from vlm_pred.walkforward import WalkForward
@@ -119,7 +119,7 @@ def file_hash(*parts):
 
 def build_enriched():
     """In-sample spine + selected candidate features. Returns (df, feature list, cache key)."""
-    df, _ = ins_oos_split(load_data_df())
+    df, _ = train_val_oos_split(load_data_df())
     df = pd.concat([df, enrich_vlm_ratio(df, [1])], axis=1)
     features = list(BASE_FEATURES)
 
