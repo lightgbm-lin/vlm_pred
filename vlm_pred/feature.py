@@ -1,7 +1,6 @@
 import pandas as pd
 import numpy as np
 from collections.abc import Sequence
-from vlm_pred import config
 from vlm_pred.util import calc_ewm
 
 
@@ -82,16 +81,12 @@ def _to_day(x) -> np.ndarray:
     return np.asarray(x, dtype="datetime64[D]")
 
 
-def enrich_calendar_features(df: pd.DataFrame, use_exchange_calendar: bool | None = None) -> pd.DataFrame:
+def enrich_calendar_features(df: pd.DataFrame) -> pd.DataFrame:
     """Calendar features per date, all point-in-time.
 
     Features from df's dates only look at the current and earlier dates, because a date's presence in df
-    is not known in advance; month end and option expiry treat every weekday as a session instead. Features
-    that need the holiday schedule come from the XNYS calendar in exchange_calendars and are skipped when
-    use_exchange_calendar is False (default: config.USE_EXCHANGE_CALENDAR).
+    is not known in advance; month end and option expiry treat every weekday as a session instead.
     """
-    if use_exchange_calendar is None:
-        use_exchange_calendar = config.USE_EXCHANGE_CALENDAR
 
     d = pd.DatetimeIndex(df.index.get_level_values('date')).normalize()
     cal = d.unique().sort_values()
@@ -117,26 +112,6 @@ def enrich_calendar_features(df: pd.DataFrame, use_exchange_calendar: bool | Non
     f["is_opex"] = (cal.weekday == 4) & (f["week_of_month"] == 3)
     f["is_quad_witch"] = f["is_opex"] & cal.month.isin([3, 6, 9, 12])
 
-    if use_exchange_calendar:
-        f = f.join(_exchange_calendar_features(cal))
-
     feats = f.reindex(d).astype(int)
     feats.index = df.index
     return feats
-
-
-def _exchange_calendar_features(cal: pd.DatetimeIndex) -> pd.DataFrame:
-    import exchange_calendars as xcals  # imported here so the package is only needed when it is used
-
-    nyse = xcals.get_calendar("XNYS", start=cal[0] - pd.Timedelta(days=31), end=cal[-1] + pd.Timedelta(days=60))
-    # Ad hoc closures (9/11, Hurricane Sandy, state funerals) were not known well in advance, so they count
-    # as sessions when looking ahead
-    adhoc = pd.DatetimeIndex(nyse.adhoc_holidays)
-    sched = nyse.sessions.union(adhoc[(adhoc >= nyse.sessions[0]) & (adhoc <= nyse.sessions[-1])])
-    next_td = sched[sched.searchsorted(cal, side="right")]
-
-    f = pd.DataFrame(index=cal)
-    f["is_pre_holiday"] = np.busday_count(_to_day(cal), _to_day(next_td)) > 1
-    # Early closes (scheduled and announced ad hoc ones such as 2003-12-26)
-    f["is_half_day"] = cal.isin(nyse.early_closes)
-    return f
