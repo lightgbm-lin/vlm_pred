@@ -46,6 +46,38 @@ def enrich_max_targets(df: pd.DataFrame, lags: Sequence[int] = (5, 10, 20)) -> p
     return max_targets
 
 
+def enrich_earnings_day(df: pd.DataFrame, lag_days: int = 364, tol_days: int = 2, min_y: float = 1.0) -> pd.DataFrame:
+    """Probability that a date is an earnings day, from last year's volume spikes, point-in-time.
+
+    A stock's earnings reaction day in a calendar quarter is taken to be its biggest y day, if volume was at least
+    (1 + min_y)x normal. Firms report in the same week each year, so such a day lag_days (52 weeks, which keeps the
+    weekday) before t predicts an earnings day at t. The prediction is spread over +/- tol_days weekdays as a
+    triangular pmf that peaks at exactly lag_days and falls linearly towards the ends (holidays keep their share,
+    so a window with a holiday sums to a little under 1). Finding a quarter's max needs the whole
+    quarter, which ends well before the date the spike is used for, so there is no look-ahead.
+    """
+    y = df['y']
+    dates = df.index.get_level_values('date')
+    uspn = df.index.get_level_values('uspn')
+
+    q_max = y.groupby([uspn, dates.to_period('Q')]).transform('max')
+    spikes = df.index[(y == q_max) & (y > min_y)]
+
+    s_dates = spikes.get_level_values('date')
+    s_uspn = spikes.get_level_values('uspn')
+    # Spikes are on trading days, so the 52-week-later centre is a weekday too
+    centre = s_dates + pd.Timedelta(days=lag_days)
+    offsets = np.arange(-tol_days, tol_days + 1)
+    # Triangular pmf: weights tol+1-|o| scaled to sum to 1, so the ends get 1/(tol+1)^2 of the mass
+    weights = (tol_days + 1 - np.abs(offsets)) / (tol_days + 1) ** 2
+    expected = pd.concat([pd.Series(w, index=pd.MultiIndex.from_arrays([centre + pd.offsets.BDay(o), s_uspn]))
+                          for o, w in zip(offsets, weights)])
+    # Windows of spikes that tie for a quarter's max can overlap; keep the higher probability
+    prob = expected.groupby(level=['date', 'uspn']).max().reindex(df.index, fill_value=0.0)
+
+    return pd.DataFrame({'earnings_day_prob': prob.to_numpy()}, index=df.index)
+
+
 def _to_day(x) -> np.ndarray:
     return np.asarray(x, dtype="datetime64[D]")
 
