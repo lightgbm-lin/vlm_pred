@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 from collections.abc import Sequence
+from vlm_pred import config
 from vlm_pred.util import calc_ewm
 
 
@@ -45,42 +46,65 @@ def enrich_max_targets(df: pd.DataFrame, lags: Sequence[int] = (5, 10, 20)) -> p
     return max_targets
 
 
-def enrich_calendar_features(df: pd.DataFrame) -> pd.DataFrame:
-    level = 'date'
-    d = pd.DatetimeIndex(df.index.get_level_values(level)).normalize()
-    cal = d.unique().sort_values()  # trading calendar from df itself
-    s = pd.Series(cal, index=cal)
-    prev_td, next_td = s.shift(1), s.shift(-1)
-    per = cal.to_period("M")
+def _to_day(x) -> np.ndarray:
+    return np.asarray(x, dtype="datetime64[D]")
+
+
+def enrich_calendar_features(df: pd.DataFrame, use_exchange_calendar: bool | None = None) -> pd.DataFrame:
+    """Calendar features per date, all point-in-time.
+
+    Features from df's dates only look at the current and earlier dates, because a date's presence in df
+    is not known in advance; month end and option expiry treat every weekday as a session instead. Features
+    that need the holiday schedule come from the XNYS calendar in exchange_calendars and are skipped when
+    use_exchange_calendar is False (default: config.USE_EXCHANGE_CALENDAR).
+    """
+    if use_exchange_calendar is None:
+        use_exchange_calendar = config.USE_EXCHANGE_CALENDAR
+
+    d = pd.DatetimeIndex(df.index.get_level_values('date')).normalize()
+    cal = d.unique().sort_values()
+    prev_td = pd.Series(cal, index=cal).shift(1)
 
     f = pd.DataFrame(index=cal)
     f["dow"] = cal.weekday
     f["month"] = cal.month
-    f["is_month_end"] = per != next_td.dt.to_period("M")
-    f["is_month_start"] = per != prev_td.dt.to_period("M")
+    f["is_month_start"] = cal.to_period("M") != prev_td.dt.to_period("M")
+    # Nth occurrence of this weekday in the month (1-5); with dow and month this locates e.g. the 3rd Friday
+    f["week_of_month"] = (cal.day - 1) // 7 + 1
+    # Holidays inferred from gaps since the previous date
+    f["is_post_holiday"] = np.busday_count(_to_day(prev_td.fillna(cal[0])), _to_day(cal)) > 1
+
+    # Month end assumes the next weekday is a session, so it misses the few months whose last weekday is a holiday
+    per = cal.to_period("M")
+    next_wd = pd.DatetimeIndex(np.busday_offset(_to_day(cal), 1, roll="forward"))
+    f["is_month_end"] = per != next_wd.to_period("M")
     f["is_quarter_end"] = f["is_month_end"] & cal.month.isin([3, 6, 9, 12])
     f["is_msci_review"] = f["is_month_end"] & cal.month.isin([2, 5, 8, 11])
 
-    # Monthly expiry: third Friday, rolled back to the prior trading day if it's a holiday
-    fifteenth = per.to_timestamp() + pd.Timedelta(days=14)
-    third_fri = fifteenth + pd.to_timedelta((4 - fifteenth.weekday) % 7, unit="D")
-    pos = cal.searchsorted(third_fri, side="right") - 1
-    f["is_opex"] = (pos >= 0) & (cal == cal[np.clip(pos, 0, None)])
+    # Monthly expiry: third Friday (when it's a holiday, expiry moves to Thursday, which this misses)
+    f["is_opex"] = (cal.weekday == 4) & (f["week_of_month"] == 3)
     f["is_quad_witch"] = f["is_opex"] & cal.month.isin([3, 6, 9, 12])
-    f["is_russell_recon"] = (cal.month == 6) & (cal.weekday == 4) & (cal.day >= 22) & (cal.day <= 28)
 
-    # Holidays inferred from gaps in the calendar
-    D = lambda x: x.values.astype("datetime64[D]")
-    f["is_post_holiday"] = np.busday_count(D(prev_td.fillna(cal[0])), D(s)) > 1
-    f["is_pre_holiday"] = np.busday_count(D(s), D(next_td.fillna(cal[-1]))) > 1
+    if use_exchange_calendar:
+        f = f.join(_exchange_calendar_features(cal))
 
-    # Half days
-    f["is_half_day"] = (
-            ((cal.month == 11) & (cal.weekday == 4) & (cal.day >= 23) & (cal.day <= 29))
-            | ((cal.month == 12) & (cal.day == 24))
-            | ((cal.month == 7) & (cal.day == 3))
-    )
-
-    feats = f.reindex(d).replace(np.nan, False).astype(int)
+    feats = f.reindex(d).astype(int)
     feats.index = df.index
     return feats
+
+
+def _exchange_calendar_features(cal: pd.DatetimeIndex) -> pd.DataFrame:
+    import exchange_calendars as xcals  # imported here so the package is only needed when it is used
+
+    nyse = xcals.get_calendar("XNYS", start=cal[0] - pd.Timedelta(days=31), end=cal[-1] + pd.Timedelta(days=60))
+    # Ad hoc closures (9/11, Hurricane Sandy, state funerals) were not known well in advance, so they count
+    # as sessions when looking ahead
+    adhoc = pd.DatetimeIndex(nyse.adhoc_holidays)
+    sched = nyse.sessions.union(adhoc[(adhoc >= nyse.sessions[0]) & (adhoc <= nyse.sessions[-1])])
+    next_td = sched[sched.searchsorted(cal, side="right")]
+
+    f = pd.DataFrame(index=cal)
+    f["is_pre_holiday"] = np.busday_count(_to_day(cal), _to_day(next_td)) > 1
+    # Early closes (scheduled and announced ad hoc ones such as 2003-12-26)
+    f["is_half_day"] = cal.isin(nyse.early_closes)
+    return f
