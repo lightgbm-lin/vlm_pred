@@ -19,8 +19,8 @@ edit it, so scores stay comparable across iterations.
    plus the columns of every selected candidate.
 2. Calls the candidate's `compute(df)` and checks its coverage.
 3. **Look-ahead check**: recomputes the feature on data truncated at a date T, with T's same-day market
-   data scrambled, and requires identical values at T. Columns that are genuinely scheduled (e.g.
-   holiday calendars) must be declared in `KNOWN_IN_ADVANCE`.
+   data scrambled, and requires identical values at T. No column is exempt: look-ahead bias is not
+   allowed, even for scheduled information such as future holidays.
 4. Walk-forwards the current feature set (cached) and the feature set with the candidate added.
 5. Reports overall and per-year ΔR², plus LightGBM gain shares.
 

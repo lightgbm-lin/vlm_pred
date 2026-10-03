@@ -5,8 +5,9 @@ panel of 497 S&P 500 stocks from 2000 to 2019.
 
 - **Target**: `y = volume / vlm_pred_naive - 1`, clipped to [-1, 10]. `vlm_pred_naive` is a 60-day-halflife
   EWMA of past volume, so `y` is the volume surprise against a naive forecast.
-- **Information set**: the forecast for date T uses data through T-1's close. Calendar or schedule facts
-  known in advance may describe T itself.
+- **Information set**: the forecast for date T uses data through T-1's close, plus calendar facts
+  derivable from dates up to T (e.g. weekday, gap since the previous session). No look-ahead: nothing
+  that needs dates after T, such as the future holiday schedule.
 - **Model**: LightGBM with a gamma objective on `y + 1`, weighted by `sp_weight`, fit walk-forward
   (expanding window, yearly refit).
 - **Metric**: R² of a pooled, `sp_weight`-weighted regression of `y` on the prediction (`vlm_pred/metric.py`).

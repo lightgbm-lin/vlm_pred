@@ -6,8 +6,8 @@ Run from the repo root:
     python -m vlm_pred.research.run --baseline                                  # print the current model's score only
     python -m vlm_pred.research.run --accept h001_name                          # add a candidate to the selected feature set
 
-The enriched frame is the in-sample spine (date <= OOS_CUTOFF) plus 'vlm_1_ratio' plus
-the columns of every candidate listed in candidates/selected.txt, applied in order.
+The enriched frame is the in-sample spine (date <= OOS_CUTOFF) plus the baseline features
+from vlm_pred/feature.py plus the columns of every candidate listed in candidates/selected.txt, applied in order.
 The OOS period is never loaded here.
 """
 import argparse
@@ -21,8 +21,8 @@ import pandas as pd
 from lightgbm import LGBMRegressor
 
 from vlm_pred.config import ROOT as REPO_ROOT
-from vlm_pred.data import load_data_df, train_val_oos_split
-from vlm_pred.feature import enrich_vlm_ratio
+from vlm_pred import feature
+from vlm_pred.data import load_data_df, train_test_split
 from vlm_pred.metric import evaluate
 from vlm_pred.walkforward import WalkForward
 
@@ -32,13 +32,12 @@ SELECTED = CANDIDATES / 'selected.txt'
 RESULTS = ROOT / 'results'
 CACHE = ROOT / '.cache'
 
-BASE_FEATURES = ['vlm_1_ratio']
 TARGET = 'y'
 WEIGHT = 'sp_weight'
 MODEL_TARGET = 'ratio_target'
 # Market data observed on date t itself; a feature for date t must not depend on these at t.
 SAME_DAY_COLS = ['price_adj', 'price_close', 'price_open', 'price_high', 'price_low',
-                 'volume', 'sp_weight', 'ret_raw', 'y']
+                 'volume', 'sp_weight', 'ret_raw', 'y', 'y_ratio']
 
 MIN_DELTA_R2 = 0.0005
 MIN_YEAR_HIT_RATE = 2 / 3
@@ -84,9 +83,8 @@ def leakage_check(module, df, full_out, quantiles=(0.25, 0.5, 0.9), seed=0):
     """Recompute on data truncated at date T with T's same-day market data scrambled.
 
     A leak-free feature for date T is unchanged by both. Returns {column: mismatch fraction}
-    for offending columns. Columns in module.KNOWN_IN_ADVANCE are exempt.
+    for offending columns. No column is exempt.
     """
-    exempt = set(getattr(module, 'KNOWN_IN_ADVANCE', {}))
     rng = np.random.default_rng(seed)
     dates = df.index.get_level_values('date')
     uniq = dates.unique().sort_values()
@@ -101,8 +99,6 @@ def leakage_check(module, df, full_out, quantiles=(0.25, 0.5, 0.9), seed=0):
         got = compute_features(module, sub).loc[at_t]
         want = full_out.loc[got.index]
         for col in got.columns:
-            if col in exempt:
-                continue
             a, b = got[col].to_numpy(), want[col].to_numpy()
             ok = np.isclose(a, b, rtol=1e-6, atol=1e-9) | (np.isnan(a) & np.isnan(b))
             if not ok.all():
@@ -117,15 +113,37 @@ def file_hash(*parts):
     return h.hexdigest()[:12]
 
 
+def baseline_features(df):
+    """The baseline feature set from vlm_pred/feature.py, cached by that file's source."""
+    key = file_hash(Path(feature.__file__).read_text())
+    cache_file = CACHE / f'base_{key}.parquet'
+    if cache_file.exists():
+        return pd.read_parquet(cache_file), key
+    base = pd.concat([
+        feature.enrich_vlm_ratio(df),
+        feature.enrich_vol_ewm(df),
+        feature.enrich_lagged_ret(df),
+        feature.enrich_lagged_targets(df),
+        feature.enrich_max_targets(df),
+        feature.enrich_earnings_day(df),
+        feature.enrich_calendar_features(df),
+    ], axis=1).astype(float)
+    CACHE.mkdir(exist_ok=True)
+    base.to_parquet(cache_file)
+    return base, key
+
+
 def build_enriched():
-    """In-sample spine + selected candidate features. Returns (df, feature list, cache key)."""
-    df, _ = train_val_oos_split(load_data_df())
-    df = pd.concat([df, enrich_vlm_ratio(df, [1])], axis=1)
-    features = list(BASE_FEATURES)
+    """In-sample spine + baseline + selected candidate features. Returns (df, feature list, cache key)."""
+    train_df, val_df, _ = train_test_split(load_data_df())
+    df = pd.concat([train_df, val_df])
+    base, base_key = baseline_features(df)
+    df = pd.concat([df, base], axis=1)
+    features = base.columns.tolist()
 
     names = selected_names()
     paths = [CANDIDATES / f'{name}.py' for name in names]
-    key = file_hash(*[p.name + p.read_text() for p in paths])
+    key = file_hash(base_key, *[p.name + p.read_text() for p in paths])
     if not names:
         return df, features, key
 
