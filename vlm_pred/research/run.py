@@ -34,7 +34,7 @@ CACHE = ROOT / '.cache'
 
 TARGET = 'y'
 WEIGHT = 'sp_weight'
-MODEL_TARGET = 'ratio_target'
+MODEL_TARGET = 'y_ratio'  # y + 1, NaN (so dropped from training) where it's <= 0; see vlm_pred/data.py
 # Market data observed on date t itself; a feature for date t must not depend on these at t.
 SAME_DAY_COLS = ['price_adj', 'price_close', 'price_open', 'price_high', 'price_low',
                  'volume', 'sp_weight', 'ret_raw', 'y', 'y_ratio']
@@ -167,7 +167,6 @@ def build_enriched():
 def prepare(df):
     df = df.copy()
     df[WEIGHT] = df[WEIGHT].fillna(0)
-    df[MODEL_TARGET] = (df[TARGET] + 1).where(lambda s: s > 0)
     return df
 
 

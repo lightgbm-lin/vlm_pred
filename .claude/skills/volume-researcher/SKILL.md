@@ -15,7 +15,7 @@ hypothesis you test, whether it passes or fails, gets logged in `vlm_pred/resear
   vlm_pred_naive, y, y_ratio` and a set of baseline features that are the outputs of the default arg of the enrich* 
   functions in `vlm_pred/feature.py`.
   - `vlm_pred_naive`: EWMA of *past* volume, 60-day halflife (shifted, so it's known before `date`).
-  - `y = volume / vlm_pred_naive - 1`, clipped to [-1, 10]. It's heavily right-skewed. `y_ratio = y + 1`.
+  - `y = volume / vlm_pred_naive - 1`, clipped to [-1, 10]. It's heavily right-skewed. `y_ratio = y + 1`, NaN where that's ≤ 0 (zero-volume days).
   - Baseline features (all point-in-time, i.e. built from data through t-1):
     - `vlm_{1,5,10,21}_ratio` (`enrich_vlm_ratio`): EWMA of past volume at that halflife / `vlm_pred_naive` - 1.
     - `vol_ewm_{1,5,10,21}` (`enrich_vol_ewm`): EWMA std of past returns.
@@ -28,7 +28,7 @@ hypothesis you test, whether it passes or fails, gets logged in `vlm_pred/resear
 - **Information set**: the prediction for `date` T is made **before T's open**, using data through T-1's
   close. Same-day `price_*`, `volume`, `ret_raw`, `sp_weight`, `y`, and `y_ratio` at T are off-limits.
 - **Model**: `LGBMRegressor(random_state=42, verbose=-1, objective='gamma')` fit on
-  `ratio_target = y + 1` (rows where it's ≤ 0 are dropped), weighted by `sp_weight`.
+  `y_ratio` (rows where it's NaN are dropped), weighted by `sp_weight`.
 - **Evaluation**: `WalkForward(..., train_window=None)` uses an expanding window, refits yearly, and needs
   252 dates of history before the first fit, so predictions cover 2002–2009. The score is the R² of a
   pooled, `sp_weight`-weighted regression of `y` on the prediction (`vlm_pred.metric.evaluate`).

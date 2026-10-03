@@ -13,7 +13,7 @@ def load_data_df():
 
     df['vlm_pred_naive'] = calc_ewm(df, halflife=60, column='volume')
     df['y'] = (df['volume'] / df['vlm_pred_naive'].mask(df['vlm_pred_naive'] <= 0) - 1).clip(lower=-1, upper=10)
-    df['y_ratio'] = (df['y'] + 1).clip(lower=1e-6)
+    df['y_ratio'] = (df['y'] + 1).where(lambda s: s > 0)
 
     return df
 
