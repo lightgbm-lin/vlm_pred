@@ -1,0 +1,145 @@
+{
+  "candidate": "h012_idio_gap",
+  "hypothesis": "H012: market-relative overnight gap at t-1: stock gap minus the sp_weight-weighted market gap, in vol units.\n\nMechanism: an overnight move shared with the whole market reflects macro or foreign news (futures moving\novernight). It lifts trading broadly and comparatively little for any single stock. The part of the gap beyond\nthe market's is company news, which drives the stock's own volume surprise. H010's raw gap mixes the two.\nThis is a stock-level column (no date-level market column) to avoid H001's date-memorization problem; beta is\nfixed at 1.\nExpected: larger |idio gap z| -> higher y_t, beyond h010_gap_z_1.",
+  "new_columns": [
+    "h012_gap_idio_z_1"
+  ],
+  "coverage": {
+    "h012_gap_idio_z_1": 0.9991
+  },
+  "leakage": "passed",
+  "base_features": [
+    "vlm_1_ratio",
+    "vlm_5_ratio",
+    "vlm_10_ratio",
+    "vlm_21_ratio",
+    "vol_ewm_1",
+    "vol_ewm_5",
+    "vol_ewm_10",
+    "vol_ewm_21",
+    "ret_1",
+    "ret_2",
+    "ret_3",
+    "ret_4",
+    "ret_5",
+    "y_1",
+    "y_2",
+    "y_3",
+    "y_4",
+    "y_5",
+    "max_y_5",
+    "max_y_10",
+    "max_y_20",
+    "earnings_day_prob",
+    "dow",
+    "month",
+    "is_month_start",
+    "week_of_month",
+    "is_post_holiday",
+    "is_month_end",
+    "is_quarter_end",
+    "is_msci_review",
+    "is_opex",
+    "is_quad_witch",
+    "h007_eday_prob_13w",
+    "h007_eday_prob_sum",
+    "h007_eday_prob_gap_sum",
+    "h009_ret_20d",
+    "h009_ret_60d",
+    "h009_pos_52w",
+    "h010_gap_z_1",
+    "h010_intra_z_1"
+  ],
+  "base_r2": 0.3033073933793766,
+  "cand_r2": 0.3032834290368277,
+  "delta_r2": -2.3964342548921103e-05,
+  "cand_tstat": 609.2809155973149,
+  "years_improved": "4/8",
+  "by_year": {
+    "2002": {
+      "base": 0.29108351970973034,
+      "cand": 0.290138578907957,
+      "delta": -0.0009449408017733196
+    },
+    "2003": {
+      "base": 0.22342184286525835,
+      "cand": 0.22442688801521116,
+      "delta": 0.0010050451499528101
+    },
+    "2004": {
+      "base": 0.2539023021926795,
+      "cand": 0.2544625366687153,
+      "delta": 0.0005602344760358147
+    },
+    "2005": {
+      "base": 0.2564294137933736,
+      "cand": 0.2545617342307338,
+      "delta": -0.001867679562639779
+    },
+    "2006": {
+      "base": 0.2508850412369228,
+      "cand": 0.25037624619850396,
+      "delta": -0.00050879503841883
+    },
+    "2007": {
+      "base": 0.32861808670543524,
+      "cand": 0.32748023504434454,
+      "delta": -0.0011378516610907052
+    },
+    "2008": {
+      "base": 0.40647070541728125,
+      "cand": 0.407965872126796,
+      "delta": 0.0014951667095147725
+    },
+    "2009": {
+      "base": 0.3812126841808068,
+      "cand": 0.3829746023021533,
+      "delta": 0.0017619181213465174
+    }
+  },
+  "gain_share": {
+    "y_1": 0.479,
+    "vlm_1_ratio": 0.2169,
+    "dow": 0.0361,
+    "is_post_holiday": 0.0302,
+    "month": 0.0261,
+    "h007_eday_prob_sum": 0.0177,
+    "vlm_5_ratio": 0.0169,
+    "h010_intra_z_1": 0.0158,
+    "is_quad_witch": 0.0155,
+    "week_of_month": 0.0141,
+    "h009_pos_52w": 0.0135,
+    "h009_ret_20d": 0.0128,
+    "ret_1": 0.0082,
+    "ret_2": 0.0073,
+    "h009_ret_60d": 0.0058,
+    "h007_eday_prob_gap_sum": 0.0053,
+    "vol_ewm_1": 0.0048,
+    "vlm_10_ratio": 0.0047,
+    "ret_3": 0.0044,
+    "ret_5": 0.0042,
+    "vlm_21_ratio": 0.0041,
+    "y_5": 0.0041,
+    "max_y_20": 0.004,
+    "h010_gap_z_1": 0.004,
+    "y_4": 0.0039,
+    "vol_ewm_21": 0.0039,
+    "is_quarter_end": 0.0039,
+    "ret_4": 0.0038,
+    "vol_ewm_5": 0.0037,
+    "y_2": 0.0032,
+    "is_month_end": 0.0029,
+    "max_y_10": 0.0028,
+    "vol_ewm_10": 0.0027,
+    "max_y_5": 0.0026,
+    "y_3": 0.0024,
+    "h012_gap_idio_z_1": 0.0021,
+    "h007_eday_prob_13w": 0.0018,
+    "is_month_start": 0.0017,
+    "is_opex": 0.0017,
+    "earnings_day_prob": 0.001,
+    "is_msci_review": 0.0003
+  },
+  "suggested_decision": "REJECT",
+  "rule": "no leakage, delta_r2 >= 0.0005, years improved >= 67%"
+}

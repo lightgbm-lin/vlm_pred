@@ -1,0 +1,144 @@
+{
+  "candidate": "h010_overnight_gap",
+  "hypothesis": "H010: split of t-1's return into overnight gap and intraday move, each in units of the stock's daily vol.\n\nMechanism: the overnight part of a return reflects news released outside trading hours (company announcements,\nanalyst actions, macro or foreign news), so a big gap marks a discrete information event, and the volume that\nfollows stays elevated as traders re-price. A large intraday move without a gap is more often order-flow driven,\nwith less follow-through. ret_1 mixes the two, and price_open isn't used by any feature so far. (H002's high-low\nrange was redundant, but a gap measures when the move happened, not the day's range.)\nResidual screen of the H007 model: |gap_1|/vol explained .0011 of residual variance.\nExpected: larger |gap_z_1| -> higher y_t, beyond what |ret_1| implies; intraday moves weaker.",
+  "new_columns": [
+    "h010_gap_z_1",
+    "h010_intra_z_1"
+  ],
+  "coverage": {
+    "h010_gap_z_1": 0.9991,
+    "h010_intra_z_1": 0.9991
+  },
+  "leakage": "passed",
+  "base_features": [
+    "vlm_1_ratio",
+    "vlm_5_ratio",
+    "vlm_10_ratio",
+    "vlm_21_ratio",
+    "vol_ewm_1",
+    "vol_ewm_5",
+    "vol_ewm_10",
+    "vol_ewm_21",
+    "ret_1",
+    "ret_2",
+    "ret_3",
+    "ret_4",
+    "ret_5",
+    "y_1",
+    "y_2",
+    "y_3",
+    "y_4",
+    "y_5",
+    "max_y_5",
+    "max_y_10",
+    "max_y_20",
+    "earnings_day_prob",
+    "dow",
+    "month",
+    "is_month_start",
+    "week_of_month",
+    "is_post_holiday",
+    "is_month_end",
+    "is_quarter_end",
+    "is_msci_review",
+    "is_opex",
+    "is_quad_witch",
+    "h007_eday_prob_13w",
+    "h007_eday_prob_sum",
+    "h007_eday_prob_gap_sum",
+    "h009_ret_20d",
+    "h009_ret_60d",
+    "h009_pos_52w"
+  ],
+  "base_r2": 0.30024962051895365,
+  "cand_r2": 0.30330737549571796,
+  "delta_r2": 0.003057754976764304,
+  "cand_tstat": 609.3154400403505,
+  "years_improved": "6/8",
+  "by_year": {
+    "2002": {
+      "base": 0.2845372930555278,
+      "cand": 0.29108351970973034,
+      "delta": 0.006546226654202569
+    },
+    "2003": {
+      "base": 0.22344800107608453,
+      "cand": 0.2234217273578153,
+      "delta": -2.6273718269242963e-05
+    },
+    "2004": {
+      "base": 0.25276601004408816,
+      "cand": 0.2539023021926795,
+      "delta": 0.0011362921485913446
+    },
+    "2005": {
+      "base": 0.2494379805635506,
+      "cand": 0.2564294137933736,
+      "delta": 0.006991433229822985
+    },
+    "2006": {
+      "base": 0.2483719144794032,
+      "cand": 0.2508850412369228,
+      "delta": 0.0025131267575195793
+    },
+    "2007": {
+      "base": 0.32298479732517127,
+      "cand": 0.32861808670543524,
+      "delta": 0.005633289380263973
+    },
+    "2008": {
+      "base": 0.4055331541149946,
+      "cand": 0.40647070541728125,
+      "delta": 0.0009375513022866766
+    },
+    "2009": {
+      "base": 0.38201421627213505,
+      "cand": 0.3812126841808069,
+      "delta": -0.0008015320913281609
+    }
+  },
+  "gain_share": {
+    "y_1": 0.4791,
+    "vlm_1_ratio": 0.2166,
+    "dow": 0.0358,
+    "is_post_holiday": 0.0305,
+    "month": 0.0262,
+    "h007_eday_prob_sum": 0.0178,
+    "vlm_5_ratio": 0.0169,
+    "h010_intra_z_1": 0.0159,
+    "is_quad_witch": 0.0156,
+    "week_of_month": 0.0142,
+    "h009_pos_52w": 0.0135,
+    "h009_ret_20d": 0.0128,
+    "ret_1": 0.0082,
+    "ret_2": 0.007,
+    "h009_ret_60d": 0.0061,
+    "h007_eday_prob_gap_sum": 0.0052,
+    "vol_ewm_1": 0.0049,
+    "vlm_10_ratio": 0.0049,
+    "h010_gap_z_1": 0.0046,
+    "ret_3": 0.0046,
+    "vol_ewm_21": 0.0042,
+    "ret_4": 0.0042,
+    "y_4": 0.0041,
+    "vlm_21_ratio": 0.0041,
+    "ret_5": 0.004,
+    "vol_ewm_5": 0.004,
+    "max_y_20": 0.004,
+    "is_quarter_end": 0.004,
+    "y_5": 0.0039,
+    "y_2": 0.0033,
+    "is_month_end": 0.003,
+    "max_y_5": 0.0028,
+    "max_y_10": 0.0027,
+    "vol_ewm_10": 0.0026,
+    "y_3": 0.0025,
+    "h007_eday_prob_13w": 0.0018,
+    "is_month_start": 0.0017,
+    "is_opex": 0.0016,
+    "earnings_day_prob": 0.0009,
+    "is_msci_review": 0.0003
+  },
+  "suggested_decision": "ACCEPT",
+  "rule": "no leakage, delta_r2 >= 0.0005, years improved >= 67%"
+}

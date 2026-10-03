@@ -1,0 +1,148 @@
+{
+  "candidate": "h013_peer_spillover",
+  "hypothesis": "H013: peer spillovers: return-correlation peers' volume surprise yesterday and earnings probability today.\n\nMechanism: stocks that move together share news. A competitor's event or a sector story lifts trading in its\npeers (sector rotation, pair and relative-value trading), and when a peer reports earnings investors re-price\nthe rest of the industry (intra-industry information transfer; Foster 1981). There is no industry data in the\nspine, so peers are each stock's 10 most correlated stocks by daily returns over the prior 252 trading days,\nrecomputed at the start of each quarter from returns before that quarter (point-in-time). Peer features vary\nby stock, unlike H001's date-level market columns.\nPre-test (residual of the H010 model, top vs bottom quintile within y_1 terciles): peer y_1 +.01 to +.03,\npeer earnings prob today +.01 to +.04. Small but survives the y_1 control.\nExpected: higher peer_y_1 and peer_eday_prob_0 -> higher y_t; small gain (~+.001).",
+  "new_columns": [
+    "h013_peer_y_1",
+    "h013_peer_eday_prob_0"
+  ],
+  "coverage": {
+    "h013_peer_y_1": 0.9452,
+    "h013_peer_eday_prob_0": 0.9452
+  },
+  "leakage": "passed",
+  "base_features": [
+    "vlm_1_ratio",
+    "vlm_5_ratio",
+    "vlm_10_ratio",
+    "vlm_21_ratio",
+    "vol_ewm_1",
+    "vol_ewm_5",
+    "vol_ewm_10",
+    "vol_ewm_21",
+    "ret_1",
+    "ret_2",
+    "ret_3",
+    "ret_4",
+    "ret_5",
+    "y_1",
+    "y_2",
+    "y_3",
+    "y_4",
+    "y_5",
+    "max_y_5",
+    "max_y_10",
+    "max_y_20",
+    "earnings_day_prob",
+    "dow",
+    "month",
+    "is_month_start",
+    "week_of_month",
+    "is_post_holiday",
+    "is_month_end",
+    "is_quarter_end",
+    "is_msci_review",
+    "is_opex",
+    "is_quad_witch",
+    "h007_eday_prob_13w",
+    "h007_eday_prob_sum",
+    "h007_eday_prob_gap_sum",
+    "h009_ret_20d",
+    "h009_ret_60d",
+    "h009_pos_52w",
+    "h010_gap_z_1",
+    "h010_intra_z_1"
+  ],
+  "base_r2": 0.3033073933793766,
+  "cand_r2": 0.3040582742461013,
+  "delta_r2": 0.0007508808667247013,
+  "cand_tstat": 610.3982494050267,
+  "years_improved": "3/8",
+  "by_year": {
+    "2002": {
+      "base": 0.29108351970973034,
+      "cand": 0.2907860210611576,
+      "delta": -0.0002974986485727582
+    },
+    "2003": {
+      "base": 0.22342184286525835,
+      "cand": 0.2241267158986583,
+      "delta": 0.0007048730333999442
+    },
+    "2004": {
+      "base": 0.2539023021926795,
+      "cand": 0.2579743995290419,
+      "delta": 0.004072097336362379
+    },
+    "2005": {
+      "base": 0.2564294137933736,
+      "cand": 0.25607010197524294,
+      "delta": -0.0003593118181306476
+    },
+    "2006": {
+      "base": 0.2508850412369228,
+      "cand": 0.24990868630916674,
+      "delta": -0.0009763549277560513
+    },
+    "2007": {
+      "base": 0.32861808670543524,
+      "cand": 0.3285810833917818,
+      "delta": -3.700331365341647e-05
+    },
+    "2008": {
+      "base": 0.40647070541728125,
+      "cand": 0.4095599952620854,
+      "delta": 0.003089289844804166
+    },
+    "2009": {
+      "base": 0.3812126841808068,
+      "cand": 0.3799888030628398,
+      "delta": -0.0012238811179670073
+    }
+  },
+  "gain_share": {
+    "y_1": 0.4728,
+    "vlm_1_ratio": 0.2189,
+    "dow": 0.0364,
+    "is_post_holiday": 0.0294,
+    "month": 0.0246,
+    "h007_eday_prob_sum": 0.0171,
+    "vlm_5_ratio": 0.0164,
+    "is_quad_witch": 0.0155,
+    "h010_intra_z_1": 0.0154,
+    "h013_peer_y_1": 0.0135,
+    "week_of_month": 0.0128,
+    "h009_pos_52w": 0.0126,
+    "h009_ret_20d": 0.0125,
+    "ret_1": 0.0074,
+    "ret_2": 0.007,
+    "h009_ret_60d": 0.0051,
+    "h007_eday_prob_gap_sum": 0.005,
+    "vlm_10_ratio": 0.0049,
+    "h010_gap_z_1": 0.0046,
+    "vol_ewm_1": 0.0045,
+    "vlm_21_ratio": 0.0042,
+    "vol_ewm_21": 0.0041,
+    "h013_peer_eday_prob_0": 0.004,
+    "ret_3": 0.0039,
+    "y_4": 0.0039,
+    "ret_5": 0.0038,
+    "is_quarter_end": 0.0038,
+    "vol_ewm_5": 0.0037,
+    "max_y_20": 0.0037,
+    "ret_4": 0.0037,
+    "y_5": 0.0034,
+    "is_month_end": 0.003,
+    "y_2": 0.0028,
+    "max_y_10": 0.0026,
+    "y_3": 0.0026,
+    "max_y_5": 0.0024,
+    "vol_ewm_10": 0.0024,
+    "h007_eday_prob_13w": 0.0016,
+    "is_opex": 0.0016,
+    "is_month_start": 0.0014,
+    "earnings_day_prob": 0.001,
+    "is_msci_review": 0.0003
+  },
+  "suggested_decision": "REJECT",
+  "rule": "no leakage, delta_r2 >= 0.0005, years improved >= 67%"
+}

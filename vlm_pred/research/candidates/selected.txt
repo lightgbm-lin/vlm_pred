@@ -1,0 +1,5 @@
+# h003_quarterly_earnings_schedule  (replaced by h005, which refines its spike definition; see hypotheses.md)
+# h005_idio_gap_earnings_schedule  (replaced by h007, which adds the annual-report one-week shift; see hypotheses.md)
+h007_annual_report_shift_schedule
+h009_price_path
+h010_overnight_gap

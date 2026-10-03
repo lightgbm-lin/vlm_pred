@@ -1,0 +1,135 @@
+{
+  "candidate": "h007_annual_report_shift_schedule",
+  "hypothesis": "H007: H005's earnings schedule with a one-week split for projections that cross the annual report.\n\nMechanism: Dec-year-end firms report Q4 together with (or ahead of) the audited 10-K, in calendar Q1, and that\nreport tends to come about a week later in the cycle than the interim ones. A spike projected *into* calendar Q1\nfrom another quarter therefore often lands one week late, and one projected *out of* Q1 one week early.\nSame-quarter projections (the 52w lag) are unaffected. Only some firms shift, so each crossing projection puts\nhalf its mass on the usual +/- 2 day triangle and half on the same triangle shifted one week (same weekday).\nDiagnostic on H005's spikes (offset of the next spike from k*91 days, all quarterly lags): unaffected pairs peak\nat 0 (21%); pairs into Q1 peak at 0 (10%) and +7 (10%); pairs out of Q1 peak at 0 (12%) and -7 (9%); the days in\nbetween stay at ~2-3%, so a shift fits better than a wider window.\nExpected: as H005 (higher prob -> higher y_t, convex), with more hits on Q1 and Q2 earnings days.",
+  "new_columns": [
+    "h007_eday_prob_13w",
+    "h007_eday_prob_sum",
+    "h007_eday_prob_gap_sum"
+  ],
+  "coverage": {
+    "h007_eday_prob_13w": 1.0,
+    "h007_eday_prob_sum": 1.0,
+    "h007_eday_prob_gap_sum": 1.0
+  },
+  "leakage": "passed",
+  "base_features": [
+    "vlm_1_ratio",
+    "vlm_5_ratio",
+    "vlm_10_ratio",
+    "vlm_21_ratio",
+    "vol_ewm_1",
+    "vol_ewm_5",
+    "vol_ewm_10",
+    "vol_ewm_21",
+    "ret_1",
+    "ret_2",
+    "ret_3",
+    "ret_4",
+    "ret_5",
+    "y_1",
+    "y_2",
+    "y_3",
+    "y_4",
+    "y_5",
+    "max_y_5",
+    "max_y_10",
+    "max_y_20",
+    "earnings_day_prob",
+    "dow",
+    "month",
+    "is_month_start",
+    "week_of_month",
+    "is_post_holiday",
+    "is_month_end",
+    "is_quarter_end",
+    "is_msci_review",
+    "is_opex",
+    "is_quad_witch"
+  ],
+  "base_r2": 0.2877362161511914,
+  "cand_r2": 0.2985434908871464,
+  "delta_r2": 0.010807274735954997,
+  "cand_tstat": 602.4551659797264,
+  "years_improved": "8/8",
+  "by_year": {
+    "2002": {
+      "base": 0.28039625549091507,
+      "cand": 0.28058772960398004,
+      "delta": 0.00019147411306497109
+    },
+    "2003": {
+      "base": 0.21582010237235294,
+      "cand": 0.22204273839561695,
+      "delta": 0.0062226360232640054
+    },
+    "2004": {
+      "base": 0.23486058832287038,
+      "cand": 0.2508792529582239,
+      "delta": 0.016018664635353508
+    },
+    "2005": {
+      "base": 0.23500322567213516,
+      "cand": 0.2487185683412706,
+      "delta": 0.013715342669135433
+    },
+    "2006": {
+      "base": 0.23911286291049094,
+      "cand": 0.24603868731991507,
+      "delta": 0.006925824409424131
+    },
+    "2007": {
+      "base": 0.30306395967835587,
+      "cand": 0.3242247511059463,
+      "delta": 0.02116079142759042
+    },
+    "2008": {
+      "base": 0.39981544249032885,
+      "cand": 0.40167645392046913,
+      "delta": 0.0018610114301402803
+    },
+    "2009": {
+      "base": 0.3589225703332697,
+      "cand": 0.3822353193079153,
+      "delta": 0.023312748974645636
+    }
+  },
+  "gain_share": {
+    "y_1": 0.4919,
+    "vlm_1_ratio": 0.2177,
+    "dow": 0.037,
+    "is_post_holiday": 0.0313,
+    "month": 0.0284,
+    "ret_1": 0.0183,
+    "vlm_5_ratio": 0.0181,
+    "h007_eday_prob_sum": 0.0177,
+    "week_of_month": 0.0158,
+    "is_quad_witch": 0.0157,
+    "ret_2": 0.0095,
+    "ret_4": 0.007,
+    "ret_3": 0.0068,
+    "ret_5": 0.0065,
+    "h007_eday_prob_gap_sum": 0.0062,
+    "y_4": 0.0054,
+    "vol_ewm_21": 0.0054,
+    "vlm_21_ratio": 0.0051,
+    "vlm_10_ratio": 0.0051,
+    "vol_ewm_1": 0.0051,
+    "y_5": 0.005,
+    "max_y_20": 0.0047,
+    "vol_ewm_5": 0.0042,
+    "is_quarter_end": 0.004,
+    "y_3": 0.0038,
+    "y_2": 0.0038,
+    "max_y_10": 0.0036,
+    "vol_ewm_10": 0.0033,
+    "max_y_5": 0.0031,
+    "is_month_end": 0.003,
+    "h007_eday_prob_13w": 0.0022,
+    "is_month_start": 0.0021,
+    "is_opex": 0.0019,
+    "earnings_day_prob": 0.0011,
+    "is_msci_review": 0.0003
+  },
+  "suggested_decision": "ACCEPT",
+  "rule": "no leakage, delta_r2 >= 0.0005, years improved >= 67%"
+}

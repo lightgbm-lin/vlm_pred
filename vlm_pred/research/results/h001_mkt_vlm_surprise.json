@@ -1,0 +1,135 @@
+{
+  "candidate": "h001_mkt_vlm_surprise",
+  "hypothesis": "H001: market-wide volume surprise (sp_weight-weighted mean y across stocks) at t-1, and its idiosyncratic residual.\n\nMechanism: a stock's volume surprise mixes a common component (macro news, volatility regime, index-level\nflows) with a stock-specific one (company news). The common part is persistent (volatility regimes last weeks)\nwhile idiosyncratic spikes decay within days, so splitting y_1 into market and residual lets the model apply\ndifferent persistence to each.\nExpected: higher market y_{t-1} (and its 5-day EWMA) -> higher y_t; idiosyncratic y_1 mean-reverts faster\nthan the market part.",
+  "new_columns": [
+    "h001_mkt_y_1",
+    "h001_mkt_y_ewm5",
+    "h001_idio_y_1"
+  ],
+  "coverage": {
+    "h001_mkt_y_1": 0.9993,
+    "h001_mkt_y_ewm5": 0.9993,
+    "h001_idio_y_1": 0.9991
+  },
+  "leakage": "passed",
+  "base_features": [
+    "vlm_1_ratio",
+    "vlm_5_ratio",
+    "vlm_10_ratio",
+    "vlm_21_ratio",
+    "vol_ewm_1",
+    "vol_ewm_5",
+    "vol_ewm_10",
+    "vol_ewm_21",
+    "ret_1",
+    "ret_2",
+    "ret_3",
+    "ret_4",
+    "ret_5",
+    "y_1",
+    "y_2",
+    "y_3",
+    "y_4",
+    "y_5",
+    "max_y_5",
+    "max_y_10",
+    "max_y_20",
+    "earnings_day_prob",
+    "dow",
+    "month",
+    "is_month_start",
+    "week_of_month",
+    "is_post_holiday",
+    "is_month_end",
+    "is_quarter_end",
+    "is_msci_review",
+    "is_opex",
+    "is_quad_witch"
+  ],
+  "base_r2": 0.2877362161511914,
+  "cand_r2": 0.2850708036850538,
+  "delta_r2": -0.0026654124661376066,
+  "cand_tstat": 583.1310375334199,
+  "years_improved": "2/8",
+  "by_year": {
+    "2002": {
+      "base": 0.28039625549091507,
+      "cand": 0.27315167285317765,
+      "delta": -0.007244582637737418
+    },
+    "2003": {
+      "base": 0.21582010237235294,
+      "cand": 0.2161289102575641,
+      "delta": 0.00030880788521114866
+    },
+    "2004": {
+      "base": 0.23486058832287038,
+      "cand": 0.233441138907171,
+      "delta": -0.0014194494156993809
+    },
+    "2005": {
+      "base": 0.23500322567213516,
+      "cand": 0.2306921803266322,
+      "delta": -0.004311045345502973
+    },
+    "2006": {
+      "base": 0.23911286291049094,
+      "cand": 0.23688328017460691,
+      "delta": -0.002229582735884028
+    },
+    "2007": {
+      "base": 0.30306395967835587,
+      "cand": 0.3048620628727772,
+      "delta": 0.0017981031944213077
+    },
+    "2008": {
+      "base": 0.39981544249032885,
+      "cand": 0.39429015176886584,
+      "delta": -0.0055252907214630165
+    },
+    "2009": {
+      "base": 0.3589225703332697,
+      "cand": 0.35620045914672993,
+      "delta": -0.002722111186539755
+    }
+  },
+  "gain_share": {
+    "y_1": 0.4736,
+    "vlm_1_ratio": 0.22,
+    "h001_mkt_y_1": 0.0389,
+    "dow": 0.0367,
+    "is_post_holiday": 0.0303,
+    "h001_mkt_y_ewm5": 0.0247,
+    "month": 0.021,
+    "ret_1": 0.0164,
+    "vlm_5_ratio": 0.0162,
+    "is_quad_witch": 0.015,
+    "week_of_month": 0.0106,
+    "ret_2": 0.0082,
+    "earnings_day_prob": 0.0082,
+    "h001_idio_y_1": 0.0066,
+    "ret_4": 0.006,
+    "ret_5": 0.0055,
+    "ret_3": 0.005,
+    "vol_ewm_21": 0.0047,
+    "vlm_21_ratio": 0.0045,
+    "vol_ewm_1": 0.0042,
+    "y_4": 0.0042,
+    "y_5": 0.0041,
+    "max_y_20": 0.0039,
+    "vol_ewm_5": 0.0038,
+    "vlm_10_ratio": 0.0037,
+    "y_3": 0.0035,
+    "is_quarter_end": 0.0031,
+    "max_y_10": 0.0031,
+    "is_month_end": 0.0029,
+    "vol_ewm_10": 0.0027,
+    "y_2": 0.0026,
+    "max_y_5": 0.0023,
+    "is_opex": 0.0019,
+    "is_month_start": 0.0019,
+    "is_msci_review": 0.0001
+  },
+  "suggested_decision": "REJECT",
+  "rule": "no leakage, delta_r2 >= 0.0005, years improved >= 67%"
+}

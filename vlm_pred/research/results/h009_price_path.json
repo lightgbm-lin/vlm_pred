@@ -1,0 +1,141 @@
+{
+  "candidate": "h009_price_path",
+  "hypothesis": "H009: longer-horizon price path: 20d and 60d cumulative returns and position within the trailing 52-week range.\n\nMechanism: turnover rises after large past returns (disposition effect and attention trading; Statman, Thorley\n& Vorkink 2006 find turnover follows returns over the past weeks to months), and stocks near their 52-week high or\nlow draw breakout trading, distress selling and anchoring on those levels. The baseline only sees 5 days of\nreturns, so a one- to three-month horizon and position in the yearly range are new information.\nResidual screen of the H007 model: 52w-low proximity and 20d return were the top stock-level signals.\nExpected: U-shaped in returns and in 52w position (extremes -> higher y_t), stronger near the 52w low.",
+  "new_columns": [
+    "h009_ret_20d",
+    "h009_ret_60d",
+    "h009_pos_52w"
+  ],
+  "coverage": {
+    "h009_ret_20d": 0.991,
+    "h009_ret_60d": 0.9739,
+    "h009_pos_52w": 0.9743
+  },
+  "leakage": "passed",
+  "base_features": [
+    "vlm_1_ratio",
+    "vlm_5_ratio",
+    "vlm_10_ratio",
+    "vlm_21_ratio",
+    "vol_ewm_1",
+    "vol_ewm_5",
+    "vol_ewm_10",
+    "vol_ewm_21",
+    "ret_1",
+    "ret_2",
+    "ret_3",
+    "ret_4",
+    "ret_5",
+    "y_1",
+    "y_2",
+    "y_3",
+    "y_4",
+    "y_5",
+    "max_y_5",
+    "max_y_10",
+    "max_y_20",
+    "earnings_day_prob",
+    "dow",
+    "month",
+    "is_month_start",
+    "week_of_month",
+    "is_post_holiday",
+    "is_month_end",
+    "is_quarter_end",
+    "is_msci_review",
+    "is_opex",
+    "is_quad_witch",
+    "h007_eday_prob_13w",
+    "h007_eday_prob_sum",
+    "h007_eday_prob_gap_sum"
+  ],
+  "base_r2": 0.2985434908871436,
+  "cand_r2": 0.30024962051895343,
+  "delta_r2": 0.0017061296318098274,
+  "cand_tstat": 604.9102818788231,
+  "years_improved": "6/8",
+  "by_year": {
+    "2002": {
+      "base": 0.28058772960398004,
+      "cand": 0.2845372930555278,
+      "delta": 0.003949563451547733
+    },
+    "2003": {
+      "base": 0.22204273839561695,
+      "cand": 0.22344800107608742,
+      "delta": 0.001405262680470476
+    },
+    "2004": {
+      "base": 0.250879252958224,
+      "cand": 0.25276601004408816,
+      "delta": 0.0018867570858641658
+    },
+    "2005": {
+      "base": 0.2487185683412706,
+      "cand": 0.2494379805635506,
+      "delta": 0.0007194122222800026
+    },
+    "2006": {
+      "base": 0.24603868731991507,
+      "cand": 0.2483719144794032,
+      "delta": 0.002333227159488138
+    },
+    "2007": {
+      "base": 0.3242247511059463,
+      "cand": 0.32298479732517127,
+      "delta": -0.001239953780775016
+    },
+    "2008": {
+      "base": 0.40167645392045237,
+      "cand": 0.4055331541149948,
+      "delta": 0.0038567001945424284
+    },
+    "2009": {
+      "base": 0.3822353193079153,
+      "cand": 0.38201421627213594,
+      "delta": -0.00022110303577937973
+    }
+  },
+  "gain_share": {
+    "y_1": 0.4865,
+    "vlm_1_ratio": 0.2134,
+    "dow": 0.0359,
+    "is_post_holiday": 0.0307,
+    "month": 0.0266,
+    "h007_eday_prob_sum": 0.0178,
+    "ret_1": 0.0166,
+    "vlm_5_ratio": 0.0162,
+    "week_of_month": 0.0157,
+    "is_quad_witch": 0.0154,
+    "h009_ret_20d": 0.0136,
+    "h009_pos_52w": 0.0135,
+    "ret_2": 0.0077,
+    "h009_ret_60d": 0.0057,
+    "h007_eday_prob_gap_sum": 0.0056,
+    "vol_ewm_21": 0.0053,
+    "vlm_10_ratio": 0.0051,
+    "ret_3": 0.0046,
+    "ret_4": 0.0046,
+    "vlm_21_ratio": 0.0046,
+    "ret_5": 0.0046,
+    "vol_ewm_5": 0.0044,
+    "y_4": 0.0043,
+    "vol_ewm_1": 0.0043,
+    "y_5": 0.0041,
+    "max_y_20": 0.0041,
+    "is_quarter_end": 0.0039,
+    "y_2": 0.0033,
+    "vol_ewm_10": 0.0032,
+    "max_y_10": 0.0031,
+    "is_month_end": 0.003,
+    "max_y_5": 0.003,
+    "y_3": 0.0029,
+    "is_month_start": 0.0019,
+    "h007_eday_prob_13w": 0.0018,
+    "is_opex": 0.0018,
+    "earnings_day_prob": 0.001,
+    "is_msci_review": 0.0003
+  },
+  "suggested_decision": "ACCEPT",
+  "rule": "no leakage, delta_r2 >= 0.0005, years improved >= 67%"
+}

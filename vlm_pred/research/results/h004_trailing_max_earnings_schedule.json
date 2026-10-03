@@ -1,0 +1,136 @@
+{
+  "candidate": "h004_trailing_max_earnings_schedule",
+  "hypothesis": "H004: H003's quarterly earnings schedule with spikes defined by a trailing max (known on the spike day).\n\nMechanism: as H003 \u2014 firms report on a ~13-week cycle, so a volume spike 13/26/39 weeks ago predicts an\nearnings day at t. H003 defines a spike as a calendar quarter's max y, which is only known at quarter end, so\nit must drop 13-week windows landing in the spike's own quarter. Here a spike is a day with y > 1 that is the\nhighest y of the trailing 63 trading days (about a quarter), which is known on the spike day itself: no window\nneeds dropping, and spikes are not tied to calendar-quarter boundaries (an early-quarter earnings day still\ncounts when a bigger event follows later in the same quarter).\nExpected: as H003 \u2014 higher prob_13w and consensus -> higher y_t, convex; similar or slightly better than H003.",
+  "new_columns": [
+    "h004_eday_prob_13w",
+    "h004_eday_prob_sum"
+  ],
+  "coverage": {
+    "h004_eday_prob_13w": 1.0,
+    "h004_eday_prob_sum": 1.0
+  },
+  "leakage": "passed",
+  "base_features": [
+    "vlm_1_ratio",
+    "vlm_5_ratio",
+    "vlm_10_ratio",
+    "vlm_21_ratio",
+    "vol_ewm_1",
+    "vol_ewm_5",
+    "vol_ewm_10",
+    "vol_ewm_21",
+    "ret_1",
+    "ret_2",
+    "ret_3",
+    "ret_4",
+    "ret_5",
+    "y_1",
+    "y_2",
+    "y_3",
+    "y_4",
+    "y_5",
+    "max_y_5",
+    "max_y_10",
+    "max_y_20",
+    "earnings_day_prob",
+    "dow",
+    "month",
+    "is_month_start",
+    "week_of_month",
+    "is_post_holiday",
+    "is_month_end",
+    "is_quarter_end",
+    "is_msci_review",
+    "is_opex",
+    "is_quad_witch",
+    "h003_eday_prob_13w",
+    "h003_eday_prob_sum"
+  ],
+  "base_r2": 0.294806437322647,
+  "cand_r2": 0.2952945483841646,
+  "delta_r2": 0.0004881110615175821,
+  "cand_tstat": 597.7852614477924,
+  "years_improved": "6/8",
+  "by_year": {
+    "2002": {
+      "base": 0.2818787356471457,
+      "cand": 0.28193858401556393,
+      "delta": 5.984836841821384e-05
+    },
+    "2003": {
+      "base": 0.22070611706308796,
+      "cand": 0.22116112909523533,
+      "delta": 0.00045501203214737274
+    },
+    "2004": {
+      "base": 0.24903490909768866,
+      "cand": 0.24884586832473954,
+      "delta": -0.0001890407729491228
+    },
+    "2005": {
+      "base": 0.249158614493607,
+      "cand": 0.2501380864270445,
+      "delta": 0.0009794719334375035
+    },
+    "2006": {
+      "base": 0.23978982914837732,
+      "cand": 0.24256720601970772,
+      "delta": 0.002777376871330395
+    },
+    "2007": {
+      "base": 0.3133138033416849,
+      "cand": 0.3151311205834849,
+      "delta": 0.0018173172418000094
+    },
+    "2008": {
+      "base": 0.4017545065879048,
+      "cand": 0.3999790862559952,
+      "delta": -0.001775420331909583
+    },
+    "2009": {
+      "base": 0.36875161464936723,
+      "cand": 0.3689865255036976,
+      "delta": 0.0002349108543303613
+    }
+  },
+  "gain_share": {
+    "y_1": 0.4937,
+    "vlm_1_ratio": 0.2174,
+    "dow": 0.0374,
+    "is_post_holiday": 0.0311,
+    "month": 0.0284,
+    "ret_1": 0.0183,
+    "vlm_5_ratio": 0.0176,
+    "week_of_month": 0.0156,
+    "is_quad_witch": 0.0152,
+    "h003_eday_prob_sum": 0.0125,
+    "ret_2": 0.0095,
+    "h004_eday_prob_sum": 0.0084,
+    "ret_4": 0.0074,
+    "ret_3": 0.0069,
+    "ret_5": 0.0067,
+    "vol_ewm_21": 0.0053,
+    "vlm_21_ratio": 0.0053,
+    "y_5": 0.0052,
+    "y_4": 0.0051,
+    "vol_ewm_1": 0.005,
+    "vlm_10_ratio": 0.0048,
+    "max_y_20": 0.0047,
+    "is_quarter_end": 0.0041,
+    "vol_ewm_5": 0.0041,
+    "y_2": 0.0038,
+    "max_y_5": 0.0036,
+    "max_y_10": 0.0036,
+    "y_3": 0.0035,
+    "vol_ewm_10": 0.0034,
+    "is_month_end": 0.0029,
+    "h003_eday_prob_13w": 0.0029,
+    "is_month_start": 0.002,
+    "is_opex": 0.0019,
+    "earnings_day_prob": 0.0017,
+    "h004_eday_prob_13w": 0.0006,
+    "is_msci_review": 0.0004
+  },
+  "suggested_decision": "REJECT",
+  "rule": "no leakage, delta_r2 >= 0.0005, years improved >= 67%"
+}
