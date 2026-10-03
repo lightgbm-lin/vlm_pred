@@ -6,9 +6,9 @@ Run from the repo root:
     python -m vlm_pred.research.run --baseline                                  # print the current model's score only
     python -m vlm_pred.research.run --accept h001_name                          # add a candidate to the selected feature set
 
-The enriched frame is the in-sample spine (date <= OOS_CUTOFF) plus the baseline features
+The enriched frame is the training spine (date <= VAL_CUTOFF) plus the baseline features
 from vlm_pred/feature.py plus the columns of every candidate listed in candidates/selected.txt, applied in order.
-The OOS period is never loaded here.
+The VAL and OOS periods are never used here.
 """
 import argparse
 import hashlib
@@ -114,8 +114,9 @@ def file_hash(*parts):
 
 
 def baseline_features(df):
-    """The baseline feature set from vlm_pred/feature.py, cached by that file's source."""
-    key = file_hash(Path(feature.__file__).read_text())
+    """The baseline feature set from vlm_pred/feature.py, cached by that file's source and df's date range."""
+    dates = df.index.get_level_values('date')
+    key = file_hash(Path(feature.__file__).read_text(), str(dates.min()), str(dates.max()), str(len(df)))
     cache_file = CACHE / f'base_{key}.parquet'
     if cache_file.exists():
         return pd.read_parquet(cache_file), key
@@ -135,8 +136,7 @@ def baseline_features(df):
 
 def build_enriched():
     """In-sample spine + baseline + selected candidate features. Returns (df, feature list, cache key)."""
-    train_df, val_df, _ = train_test_split(load_data_df())
-    df = pd.concat([train_df, val_df])
+    df, _, _ = train_test_split(load_data_df())
     base, base_key = baseline_features(df)
     df = pd.concat([df, base], axis=1)
     features = base.columns.tolist()

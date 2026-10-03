@@ -15,8 +15,8 @@ edit it, so scores stay comparable across iterations.
 
 ## What `run.py` does for a candidate
 
-1. Builds the in-sample frame (dates through 2014; the holdout is never touched), plus `vlm_1_ratio`,
-   plus the columns of every selected candidate.
+1. Builds the training frame (dates through 2009; the VAL and OOS periods are never touched), plus the
+   baseline features from `vlm_pred/feature.py`, plus the columns of every selected candidate.
 2. Calls the candidate's `compute(df)` and checks its coverage.
 3. **Look-ahead check**: recomputes the feature on data truncated at a date T, with T's same-day market
    data scrambled, and requires identical values at T. No column is exempt: look-ahead bias is not
@@ -29,16 +29,8 @@ overrule the rule, but must give the reason in the log.
 
 ## Results so far
 
-| | Factor | ΔR² | Years improved | Decision |
-|---|---|---|---|---|
-| | baseline `vlm_1_ratio` | 0.23088 | | |
-| H001 | volume term structure (5d/21d) | +0.00169 | 12/13 | accepted |
-| H002 | scheduled calendar events | +0.02777 | 13/13 | accepted |
-| H003 | market-wide volume shock | +0.00095 | 6/13 | rejected |
-| H004 | earnings seasonality | +0.00549 | 12/13 | accepted |
-| H005 | T-1 price shock vs own volatility | +0.00637 | 13/13 | accepted |
-| H006 | idiosyncratic volume ratio | +0.00134 | 10/13 | accepted |
-| | **current model** | **0.27353** | | |
+See [`hypotheses.md`](hypotheses.md) for the current model, its walk-forward R² (2002–2009), and every
+tested hypothesis.
 
 ## Commands
 

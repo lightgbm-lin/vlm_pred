@@ -30,7 +30,7 @@ hypothesis you test, whether it passes or fails, gets logged in `vlm_pred/resear
 - **Model**: `LGBMRegressor(random_state=42, verbose=-1, objective='gamma')` fit on
   `ratio_target = y + 1` (rows where it's ≤ 0 are dropped), weighted by `sp_weight`.
 - **Evaluation**: `WalkForward(..., train_window=None)` uses an expanding window, refits yearly, and needs
-  252 dates of history before the first fit, so predictions cover 2002–2014. The score is the R² of a
+  252 dates of history before the first fit, so predictions cover 2002–2009. The score is the R² of a
   pooled, `sp_weight`-weighted regression of `y` on the prediction (`vlm_pred.metric.evaluate`).
 - **Data split**: research uses only dates ≤ `VAL_CUTOFF` (2010-01-01). Never load, compute on, or look
   at the VAL or OOS periods (`val_df` `oos_df`).
@@ -162,14 +162,14 @@ def compute(df: pd.DataFrame) -> pd.DataFrame:
 ## Current model
 - Features: baseline features (`vlm_pred/feature.py`) + <selected candidates' columns>
 - Selected candidates (see candidates/selected.txt): <list>
-- Walk-forward R² (2002–2010, train only): 0.xxxxx  (t = …)
+- Walk-forward R² (2002–2009, train only): 0.xxxxx  (t = …)
 
 ## Tested hypotheses
 
 ### H001 — <short name> — ACCEPTED | REJECTED | LEAKY
 - File: `candidates/h001_short_name.py` · columns: `h001_…`
 - Hypothesis / mechanism: …
-- Result: R² 0.xxxxx → 0.xxxxx (Δ +0.00xxx), years improved k/13, gain share x.xx
+- Result: R² 0.xxxxx → 0.xxxxx (Δ +0.00xxx), years improved k/8, gain share x.xx
 - Notes: per-year pattern, surprises, why it (did not) work, follow-ups.
 
 ## Backlog
