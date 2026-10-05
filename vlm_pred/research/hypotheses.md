@@ -252,6 +252,23 @@
 - Conclusion: no feature-only idea found with a large expected gain. The remaining large error is unscheduled
   news on spike days, which daily price/volume history can't anticipate.
 
+### H015 — stock's typical earnings spike size (alone and × H007 schedule) — REJECTED
+- File: `candidates/h015_earnings_spike_size.py` · columns: `h015_spike_mean_4q`, `h015_eday_x_spike`
+- Hypothesis / mechanism: H007 says *when* earnings are likely, not *how big* the reaction is, and reaction size is
+  a stable trait of a stock (coverage, retail interest, guidance practice). Size = each calendar quarter's max idio
+  y (H007's spike day; every quarter counts, including sub-threshold ones, since a muted reaction is also
+  information), mean over the last 4 completed quarters (min 2). A date in Q uses quarters ≤ Q−1. Plus the product
+  with `h007_eday_prob_sum`, because the earlier diagnostic showed size matters only at high prob.
+- User-requested (follows the "spike magnitude" diagnostic above).
+- Shape (mean y by size quintile within prob_sum bins): prob 0: .020 → −.002; (0,.3]: .084 → .059; (.3,.6]:
+  .21 → .25; > .6: .70 → 1.22 (but only ~750 rows per cell). Spearman with y: size −.09, product +.06.
+- Result: R² 0.30331 → 0.30374 (Δ +0.00044), years improved 4/8, gain share eday_x_spike .008, spike_mean .003
+- Notes: by year 2007 +.0051, 2006 +.0018, 2003 +.0012, 2008 +.0009; 2009 −.0024, 2005 −.0012, 2002/2004 −.0010.
+  Fails both rules, and the gain is mostly 2007. This confirms the diagnostic: magnitude matters only on the
+  few rows where the schedule is confident (prob_sum > .6 is < 0.4% of rows), so the effect is real but too small
+  to move pooled R², and at low prob the column mostly marks spike-prone stocks (already in max_y_*, y lags).
+  The bottleneck is timing, not size. Not worth retrying with other windows (8q, median) unless timing improves.
+
 ## Ruled out (not testable under the research rules)
 - Early-close sessions (Dec 24, Jul 3, day after Thanksgiving) and holiday-eve flags (e.g. day before
   Thanksgiving). Ruled out by the user as contextual information (exchange-schedule knowledge, not data), even
@@ -261,7 +278,8 @@
 
 ## Backlog
 - Further earnings-spike refinements — spike size (idio y of the source spike) as a confidence weight in the
-  consensus. (Top-2 spikes per quarter: H006, no gain. Annual-report shift: H007, accepted.)
+  consensus. (Top-2 spikes per quarter: H006, no gain. Annual-report shift: H007, accepted. Stock-level average
+  spike size, alone and × schedule: H015, Δ +.00044, rejected; size matters only where timing is confident.)
 - Per-stock shift choice (follow-up to H007) — use the stock's own last-year Q3→Q1 offset (known point-in-time)
   to put H007's mass on the shifted or unshifted triangle instead of 50/50. The diagnostic's two sharp peaks
   suggest firms are consistently one type or the other.
