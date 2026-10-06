@@ -1,10 +1,11 @@
 # Volume factor research log
 
 ## Current model
-- Features: baseline features (`vlm_pred/feature.py`, 32 columns) + `h007_eday_prob_13w`, `h007_eday_prob_sum`,
-  `h007_eday_prob_gap_sum` + `h009_ret_20d`, `h009_ret_60d`, `h009_pos_52w` + `h010_gap_z_1`, `h010_intra_z_1`
-- Selected candidates (see candidates/selected.txt): h007_annual_report_shift_schedule, h009_price_path,
-  h010_overnight_gap
+- Features: baseline features (`vlm_pred/feature.py`, 40 columns). H007, H009 and H010 were moved into the
+  baseline (2026-10-05) as `enrich_earnings_schedule` (`eday_prob_13w`, `eday_prob_sum`, `eday_prob_gap_sum`),
+  `enrich_price_path` (`ret_20d`, `ret_60d`, `pos_52w`) and `enrich_overnight_gap` (`gap_z_1`, `intra_z_1`).
+  Outputs identical to the candidates; only the `hNNN_` prefixes were dropped.
+- Selected candidates (see candidates/selected.txt): none
 - Walk-forward R² (2002–2009, train only): 0.30331  (t = 609.3)
   - by year: 2002 .2911 · 2003 .2234 · 2004 .2539 · 2005 .2564 · 2006 .2509 · 2007 .3286 · 2008 .4065 · 2009 .3812
 - History: baseline only 0.28774 (t = 586.9; top gains y_1 .494, vlm_1_ratio .226, dow .039) → +H003 0.29481
@@ -269,6 +270,29 @@
   to move pooled R², and at low prob the column mostly marks spike-prone stocks (already in max_y_*, y lags).
   The bottleneck is timing, not size. Not worth retrying with other windows (8q, median) unless timing improves.
 
+### H016 — earnings schedule centred by last year's same-quarter gap (replaces H007's Q1 rule) — REJECTED
+- File: `candidates/h016_last_year_gap_schedule.py` · columns: `h016_eday_prob_13w`, `h016_eday_prob_sum`,
+  `h016_eday_prob_gap_sum`
+- Hypothesis / mechanism: H007's rule assumes the late annual report falls in calendar Q1, true only for Dec/Jan
+  fiscal year-ends. Instead centre a 13k-week projection from quarter q at spike + last year's gap between the
+  stock's q−4 and q−4+k spikes, rounded to whole weeks, all mass on that centre; used only within ±14d of 13k
+  weeks, else (or if last year's pair is missing) the fixed lag. 52w lags unchanged. Same spikes, gap-confirmed
+  column and quarter-end filter as H007. User-requested (option 2 of a fiscal-year-end discussion).
+- Context: per-stock latest-reporting quarter (from 13w-pair offsets, 81 stocks with ≥ 3 pairs per quarter): Q1
+  47%, Q2 17%, Q3 20%, Q4 16%. Q1 is clearly over-represented; no other quarter clusters, but per-stock
+  estimates are noisy.
+- Pre-test (4,300 13/26/39w pairs with both years' offsets within 14d): last year's week offset predicts this
+  year's only weakly (last year +7 → this year +7 30%, 0 35%; last year 0 → 0 52%). Mean pmf mass on the
+  realised date: fixed lag .097, H007 .096, H016 .084, last-year 50/50 with fixed .091. Corr with y (sum):
+  H016 .090 vs H007 .102.
+- Result on top of the baseline: R² 0.30331 → 0.30335 (Δ +0.00004), years improved 4/8, gain share h016 sum .003.
+- Result as a **replacement** for `eday_prob_*`: R² 0.30331 → 0.30103 (Δ −0.00228), years improved 2/8 (2004
+  −.0111, 2006 −.0044, 2007 −.0038; 2008 +.0045). Saved as `results/h016_last_year_gap_schedule_replacing_eday.json`.
+- Decision: reject. Year-to-year spike timing is too noisy for one past pair to set the centre: committing all
+  mass to last year's offset moves many projections off a date that the fixed lag would have hit. The pooled
+  Q1 rule's 50/50 hedge works better than a per-stock point estimate. Lesson: per-stock timing needs several
+  years of evidence (or a hedge), not one pair.
+
 ## Ruled out (not testable under the research rules)
 - Early-close sessions (Dec 24, Jul 3, day after Thanksgiving) and holiday-eve flags (e.g. day before
   Thanksgiving). Ruled out by the user as contextual information (exchange-schedule knowledge, not data), even
@@ -282,7 +306,8 @@
   spike size, alone and × schedule: H015, Δ +.00044, rejected; size matters only where timing is confident.)
 - Per-stock shift choice (follow-up to H007) — use the stock's own last-year Q3→Q1 offset (known point-in-time)
   to put H007's mass on the shifted or unshifted triangle instead of 50/50. The diagnostic's two sharp peaks
-  suggest firms are consistently one type or the other.
+  suggest firms are consistently one type or the other. Caution from H016: a single last-year offset persists
+  only weakly (+7 → +7 30% vs 0 35%), so weight by several years' evidence rather than switching on one pair.
 - Stock-level schedule reliability — fraction of a stock's past spikes that recurred on-cycle (point-in-time).
   Some firms report on a fixed calendar and others drift; H006's placebo test shows on-cycle vs off-cycle
   recurrence can be measured per spike set, and so per stock.

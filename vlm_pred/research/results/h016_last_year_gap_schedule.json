@@ -1,0 +1,151 @@
+{
+  "candidate": "h016_last_year_gap_schedule",
+  "hypothesis": "H016: earnings schedule centred by last year's gap between the same two quarters (replaces H007's Q1 rule).\n\nMechanism: the annual report comes about a week later in the reporting cycle than interim reports, but in the\nfirm's fiscal Q4, which is calendar Q1 only for Dec/Jan year-ends (June, Sept and May year-ends are common in the\nS&P 500). Instead of H007's calendar-Q1 rule, a projection from a spike in quarter q to quarter q+k (lag 13k\nweeks) is centred at spike + last year's gap between the stock's q-4 and q-4+k spikes, rounded to whole weeks\n(firms keep their reporting weekday). This handles any fiscal year-end without knowing which quarter is the\nannual one. The gap is only used within +/- 14 days of 13k weeks (beyond that one of last year's spikes was likely\nnot an earnings day); otherwise, or when last year's pair is missing, the fixed lag is used. 52w lags are unchanged.\nPre-test (pairs with both years' offsets within 14d): last year's week offset predicts this year's only weakly\n(last year +7 -> this year +7 30%, 0 35%); mean pmf mass on the realised date: fixed .097, H007 .096, H016 .084.\nExpected: as H007 (higher prob -> higher y_t). Columns replace eday_prob_*; compare as a replacement.",
+  "new_columns": [
+    "h016_eday_prob_13w",
+    "h016_eday_prob_sum",
+    "h016_eday_prob_gap_sum"
+  ],
+  "coverage": {
+    "h016_eday_prob_13w": 1.0,
+    "h016_eday_prob_sum": 1.0,
+    "h016_eday_prob_gap_sum": 1.0
+  },
+  "leakage": "passed",
+  "base_features": [
+    "vlm_1_ratio",
+    "vlm_5_ratio",
+    "vlm_10_ratio",
+    "vlm_21_ratio",
+    "vol_ewm_1",
+    "vol_ewm_5",
+    "vol_ewm_10",
+    "vol_ewm_21",
+    "ret_1",
+    "ret_2",
+    "ret_3",
+    "ret_4",
+    "ret_5",
+    "y_1",
+    "y_2",
+    "y_3",
+    "y_4",
+    "y_5",
+    "max_y_5",
+    "max_y_10",
+    "max_y_20",
+    "earnings_day_prob",
+    "eday_prob_13w",
+    "eday_prob_sum",
+    "eday_prob_gap_sum",
+    "ret_20d",
+    "ret_60d",
+    "pos_52w",
+    "gap_z_1",
+    "intra_z_1",
+    "dow",
+    "month",
+    "is_month_start",
+    "week_of_month",
+    "is_post_holiday",
+    "is_month_end",
+    "is_quarter_end",
+    "is_msci_review",
+    "is_opex",
+    "is_quad_witch"
+  ],
+  "base_r2": 0.30330739337937673,
+  "cand_r2": 0.3033516120630898,
+  "delta_r2": 4.4218683713070916e-05,
+  "cand_tstat": 609.3792185359437,
+  "years_improved": "4/8",
+  "by_year": {
+    "2002": {
+      "base": 0.29108351970973034,
+      "cand": 0.2903899771768631,
+      "delta": -0.0006935425328672418
+    },
+    "2003": {
+      "base": 0.22342184286525835,
+      "cand": 0.2247328159480414,
+      "delta": 0.0013109730827830512
+    },
+    "2004": {
+      "base": 0.2539023021926795,
+      "cand": 0.254331512403178,
+      "delta": 0.0004292102104984652
+    },
+    "2005": {
+      "base": 0.2564294137933736,
+      "cand": 0.2534470937751815,
+      "delta": -0.0029823200181920972
+    },
+    "2006": {
+      "base": 0.2508850412369229,
+      "cand": 0.25059777139107775,
+      "delta": -0.0002872698458451506
+    },
+    "2007": {
+      "base": 0.32861808670543513,
+      "cand": 0.32845555258350834,
+      "delta": -0.00016253412192679395
+    },
+    "2008": {
+      "base": 0.40647070541728103,
+      "cand": 0.40915720310184944,
+      "delta": 0.002686497684568412
+    },
+    "2009": {
+      "base": 0.3812126841808068,
+      "cand": 0.38174332317374937,
+      "delta": 0.0005306389929425892
+    }
+  },
+  "gain_share": {
+    "y_1": 0.4759,
+    "vlm_1_ratio": 0.2184,
+    "dow": 0.0355,
+    "is_post_holiday": 0.0305,
+    "month": 0.0266,
+    "vlm_5_ratio": 0.0171,
+    "intra_z_1": 0.0159,
+    "eday_prob_sum": 0.0154,
+    "is_quad_witch": 0.0154,
+    "week_of_month": 0.0146,
+    "pos_52w": 0.0133,
+    "ret_20d": 0.0131,
+    "ret_1": 0.0078,
+    "ret_2": 0.0071,
+    "ret_60d": 0.0057,
+    "vlm_10_ratio": 0.0048,
+    "vol_ewm_1": 0.0046,
+    "gap_z_1": 0.0045,
+    "ret_3": 0.0044,
+    "vlm_21_ratio": 0.0042,
+    "ret_4": 0.0042,
+    "vol_ewm_21": 0.0042,
+    "ret_5": 0.004,
+    "max_y_20": 0.004,
+    "vol_ewm_5": 0.004,
+    "is_quarter_end": 0.0038,
+    "y_4": 0.0038,
+    "eday_prob_gap_sum": 0.0037,
+    "y_5": 0.0037,
+    "y_2": 0.0035,
+    "h016_eday_prob_sum": 0.0031,
+    "is_month_end": 0.0029,
+    "max_y_5": 0.0029,
+    "max_y_10": 0.0028,
+    "vol_ewm_10": 0.0028,
+    "h016_eday_prob_gap_sum": 0.0027,
+    "y_3": 0.0025,
+    "is_month_start": 0.0018,
+    "is_opex": 0.0016,
+    "eday_prob_13w": 0.0015,
+    "earnings_day_prob": 0.0009,
+    "is_msci_review": 0.0003,
+    "h016_eday_prob_13w": 0.0003
+  },
+  "suggested_decision": "REJECT",
+  "rule": "no leakage, delta_r2 >= 0.0005, years improved >= 67%"
+}
