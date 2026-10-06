@@ -100,11 +100,8 @@ def enrich_earnings_schedule(df: pd.DataFrame, lags_weeks: Sequence[int] = (13, 
     q_max = idio.groupby([uspn, dates.to_period('Q')]).transform('max')
     is_spike = (idio == q_max) & (idio > min_y)
 
-    # Overnight return, split-safe: close-to-close total return net of the same-day intraday move
-    intraday = df['price_close'] / df['price_open'].where(df['price_open'] > 0)
-    gap = (1 + df['ret_raw']) / intraday - 1
-    vol = enrich_vol_ewm(df, hls=(21,))['vol_ewm_21']
-    is_confirmed = is_spike & (gap.abs() / vol.where(vol > 0) >= gap_z)
+    gap, _ = _overnight_and_intraday(df)
+    is_confirmed = is_spike & (gap.abs() / _daily_vol(df) >= gap_z)
 
     def schedule(spikes: pd.MultiIndex) -> dict[int, pd.Series]:
         return {lag: _earnings_schedule_prob(spikes, df.index, 7 * lag, tol_days, shift_days, shift_share)
@@ -152,6 +149,52 @@ def _earnings_schedule_prob(spikes: pd.MultiIndex, index: pd.MultiIndex, lag_day
     expected = pd.concat(parts)
     # A spike's two triangles are a week apart and never overlap; across spikes, keep the higher probability
     return expected.groupby(level=[0, 1]).max().reindex(index, fill_value=0.0)
+
+
+def enrich_price_path(df: pd.DataFrame, ret_days: Sequence[int] = (20, 60), range_days: int = 252) -> pd.DataFrame:
+    """Longer-horizon price path through t-1: cumulative returns and position within the trailing 52-week range.
+
+    Turnover rises after large past returns (disposition effect, attention trading), and stocks near their 52-week
+    high or low draw breakout trading, distress selling and anchoring on those levels. pos_52w is 0 at the range's
+    low and 1 at its high, NaN with fewer than 60 days of history or a flat range.
+    """
+    price = df.groupby(level='uspn')['price_adj']
+    last_close = price.shift(1)
+    hi = price.transform(lambda x: x.rolling(range_days, min_periods=60).max().shift(1))
+    lo = price.transform(lambda x: x.rolling(range_days, min_periods=60).min().shift(1))
+
+    feats = pd.DataFrame({f'ret_{n}d': last_close / price.shift(n + 1) - 1 for n in ret_days}, index=df.index)
+    feats['pos_52w'] = (last_close - lo) / (hi - lo).where(hi > lo)
+    return feats
+
+
+def enrich_overnight_gap(df: pd.DataFrame) -> pd.DataFrame:
+    """t-1's return split into the overnight gap and the intraday move, each in units of the stock's daily vol.
+
+    A big overnight gap marks news released outside trading hours, and the volume that follows stays elevated as
+    traders re-price; a large intraday move without a gap is more often order-flow driven, with less follow-through.
+    """
+    gap, intraday = _overnight_and_intraday(df)
+    lagged = pd.DataFrame({'gap': gap, 'intraday': intraday}).groupby(level='uspn').shift(1)
+    vol = _daily_vol(df)
+
+    return pd.DataFrame({
+        'gap_z_1': lagged['gap'] / vol,
+        'intra_z_1': lagged['intraday'] / vol,
+    }, index=df.index)
+
+
+def _overnight_and_intraday(df: pd.DataFrame) -> tuple[pd.Series, pd.Series]:
+    """Same-day overnight and intraday returns. The gap is split-safe: close-to-close total return net of intraday."""
+    intraday = df['price_close'] / df['price_open'].where(df['price_open'] > 0)
+    gap = (1 + df['ret_raw']) / intraday - 1
+    return gap, intraday - 1
+
+
+def _daily_vol(df: pd.DataFrame) -> pd.Series:
+    """Daily return std through t-1 (vol_ewm_21), NaN where it is not positive."""
+    vol = enrich_vol_ewm(df, hls=(21,))['vol_ewm_21']
+    return vol.where(vol > 0)
 
 
 def _to_day(x) -> np.ndarray:

@@ -5,7 +5,7 @@ overnight). It lifts trading broadly and comparatively little for any single sto
 the market's is company news, which drives the stock's own volume surprise. H010's raw gap mixes the two.
 This is a stock-level column (no date-level market column) to avoid H001's date-memorization problem; beta is
 fixed at 1.
-Expected: larger |idio gap z| -> higher y_t, beyond h010_gap_z_1.
+Expected: larger |idio gap z| -> higher y_t, beyond gap_z_1.
 """
 import numpy as np
 import pandas as pd

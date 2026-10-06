@@ -6,7 +6,7 @@ that keeps going in the same direction is news absorbed and confirmed. H010's si
 let trees cut out the reversal quadrant but not the amount reversed, which is the product of the two.
 Column: sign(gap * intra) * sqrt(|gap * intra|), both at t-1 in vol_ewm_21 units. Negative means reversal,
 positive means continuation; zero when either move is zero.
-Expected: more negative (bigger reversal) -> higher y_t, beyond h010_gap_z_1 / h010_intra_z_1.
+Expected: more negative (bigger reversal) -> higher y_t, beyond gap_z_1 / intra_z_1.
 """
 import numpy as np
 import pandas as pd

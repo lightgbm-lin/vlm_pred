@@ -128,6 +128,8 @@ def baseline_features(df):
         feature.enrich_max_targets(df),
         feature.enrich_earnings_day(df),
         feature.enrich_earnings_schedule(df),
+        feature.enrich_price_path(df),
+        feature.enrich_overnight_gap(df),
         feature.enrich_calendar_features(df),
     ], axis=1).astype(float)
     CACHE.mkdir(exist_ok=True)

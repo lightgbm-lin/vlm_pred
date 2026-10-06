@@ -6,7 +6,7 @@ H010 showed the overnight/intraday split of ret_1 carries information beyond ret
 measure of the news state, and an EWMA over about a week (halflife 5, the life of a running story) measures it
 better.
 Data check: no row has its open outside [low, high], and only 17 rows have |gap| > 20 sigma, so no cleaning.
-Expected: higher gap_absz_ewm5 -> higher y_t, beyond h010_gap_z_1.
+Expected: higher gap_absz_ewm5 -> higher y_t, beyond gap_z_1.
 """
 import numpy as np
 import pandas as pd
