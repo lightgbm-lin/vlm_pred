@@ -23,6 +23,9 @@ hypothesis you test, whether it passes or fails, gets logged in `vlm_pred/resear
     - `max_y_{5,10,20}` (`enrich_max_targets`): rolling max of past `y`.
     - `earnings_day_prob` (`enrich_earnings_day`): chance T is an earnings day, from quarterly max-`y` spikes
       (`y` > 1) 52 weeks earlier, spread ±2 business days.
+    - `eday_prob_13w, eday_prob_sum, eday_prob_gap_sum` (`enrich_earnings_schedule`): as above, but from
+      idiosyncratic-`y` spikes 13/26/39/52 weeks earlier (sum over lags; `gap` = spikes with a >= 2-vol
+      overnight gap only), with half the mass shifted a week when the projection crosses calendar Q1.
     - Calendar (`enrich_calendar_features`): `dow, month, week_of_month, is_month_start, is_month_end,
       is_quarter_end, is_msci_review, is_opex, is_quad_witch, is_post_holiday`.
 - **Information set**: the prediction for `date` T is made **before T's open**, using data through T-1's

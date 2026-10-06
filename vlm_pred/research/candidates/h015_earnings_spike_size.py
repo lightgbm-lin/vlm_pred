@@ -7,7 +7,7 @@ carries, guidance practice and options activity all differ across firms, so the 
 (max idiosyncratic y, i.e. y minus that day's cross-sectional median), and its size is that idiosyncratic y. Every
 quarter counts, including ones whose max stays below H007's spike threshold: a muted reaction is information too.
 A quarter's max is known only at its end, so a date in quarter Q uses quarters up to Q-1 (4 of them, min 2).
-Expected: on its own, mildly positive (spike-prone stocks); the product with h007_eday_prob_sum should be strongly
+Expected: on its own, mildly positive (spike-prone stocks); the product with eday_prob_sum should be strongly
 positive and convex, i.e. bigger predicted y on predicted earnings days of stocks that react strongly.
 """
 import numpy as np
@@ -34,5 +34,5 @@ def compute(df: pd.DataFrame) -> pd.DataFrame:
 
     return pd.DataFrame({
         'h015_spike_mean_4q': size,
-        'h015_eday_x_spike': df['h007_eday_prob_sum'].to_numpy() * size,
+        'h015_eday_x_spike': df['eday_prob_sum'].to_numpy() * size,
     }, index=df.index)

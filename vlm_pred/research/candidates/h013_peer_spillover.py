@@ -60,7 +60,7 @@ def _peer_mean(index: pd.MultiIndex, wide: pd.DataFrame, mats: dict) -> pd.Serie
 def compute(df: pd.DataFrame) -> pd.DataFrame:
     mats = _peer_matrices(df)
     y_prev = df['y'].unstack('uspn').shift(1)                 # peers' y on the previous date
-    eday = df['h007_eday_prob_sum'].unstack('uspn')            # peers' earnings prob today, known pre-open
+    eday = df['eday_prob_sum'].unstack('uspn')            # peers' earnings prob today, known pre-open
     return pd.DataFrame({
         'h013_peer_y_1': _peer_mean(df.index, y_prev, mats).to_numpy(),
         'h013_peer_eday_prob_0': _peer_mean(df.index, eday, mats).to_numpy(),

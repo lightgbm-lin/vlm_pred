@@ -77,6 +77,83 @@ def enrich_earnings_day(df: pd.DataFrame, lag_days: int = 364, tol_days: int = 2
     return pd.DataFrame({'earnings_day_prob': prob.to_numpy()}, index=df.index)
 
 
+def enrich_earnings_schedule(df: pd.DataFrame, lags_weeks: Sequence[int] = (13, 26, 39, 52), tol_days: int = 2,
+                             min_y: float = 1.0, gap_z: float = 2.0, shift_days: int = 7,
+                             shift_share: float = 0.5) -> pd.DataFrame:
+    """Probability that a date is an earnings day, projected from the last four quarters' volume spikes.
+
+    A spike is a stock's biggest idiosyncratic y (y net of the day's cross-sectional median) in a calendar quarter,
+    if above min_y. A confirmed spike also gapped overnight by at least gap_z daily vols. Firms report on a
+    quarterly cycle, so a spike lag weeks (which keeps the weekday) before t predicts an earnings day at t, spread
+    over +/- tol_days business days as in enrich_earnings_day.
+
+    Dec-year-end firms report Q4 with the annual report, in calendar Q1, about a week later in the cycle than the
+    interim reports. A projection into calendar Q1 from another quarter therefore puts shift_share of its mass one
+    week later, and one out of Q1 shift_share of its mass one week earlier.
+
+    Columns: the nearest lag's probability, the sum over lags, and the sum over lags from confirmed spikes only.
+    """
+    dates = df.index.get_level_values('date')
+    uspn = df.index.get_level_values('uspn')
+
+    idio = df['y'] - df['y'].groupby(dates).transform('median')
+    q_max = idio.groupby([uspn, dates.to_period('Q')]).transform('max')
+    is_spike = (idio == q_max) & (idio > min_y)
+
+    # Overnight return, split-safe: close-to-close total return net of the same-day intraday move
+    intraday = df['price_close'] / df['price_open'].where(df['price_open'] > 0)
+    gap = (1 + df['ret_raw']) / intraday - 1
+    vol = enrich_vol_ewm(df, hls=(21,))['vol_ewm_21']
+    is_confirmed = is_spike & (gap.abs() / vol.where(vol > 0) >= gap_z)
+
+    def schedule(spikes: pd.MultiIndex) -> dict[int, pd.Series]:
+        return {lag: _earnings_schedule_prob(spikes, df.index, 7 * lag, tol_days, shift_days, shift_share)
+                for lag in lags_weeks}
+
+    probs = schedule(df.index[is_spike])
+    probs_confirmed = schedule(df.index[is_confirmed])
+
+    return pd.DataFrame({
+        f'eday_prob_{lags_weeks[0]}w': probs[lags_weeks[0]].to_numpy(),
+        'eday_prob_sum': sum(probs.values()).to_numpy(),
+        'eday_prob_gap_sum': sum(probs_confirmed.values()).to_numpy(),
+    }, index=df.index)
+
+
+def _earnings_schedule_prob(spikes: pd.MultiIndex, index: pd.MultiIndex, lag_days: int, tol_days: int,
+                            shift_days: int, shift_share: float) -> pd.Series:
+    """Triangular pmf around each spike + lag_days, with shift_share moved a week when the projection crosses Q1."""
+    s_dates = spikes.get_level_values('date')
+    centre = s_dates + pd.Timedelta(days=lag_days)
+    proj = pd.DataFrame({
+        'uspn': spikes.get_level_values('uspn'),
+        'centre': centre,
+        # A quarter's max is only known once the quarter ends
+        'known_after': s_dates.to_period('Q').end_time.normalize(),
+        'mass': 1.0,
+    })
+
+    # +shift_days into calendar Q1, -shift_days out of it, 0 otherwise
+    shift = shift_days * ((centre.quarter == 1).astype(int) - (s_dates.quarter == 1).astype(int))
+    crosses = shift != 0
+    shifted = proj[crosses].assign(centre=proj['centre'][crosses] + pd.to_timedelta(shift[crosses], unit='D'),
+                                   mass=shift_share)
+    proj.loc[crosses, 'mass'] = 1 - shift_share
+    proj = pd.concat([proj, shifted], ignore_index=True)
+
+    offsets = np.arange(-tol_days, tol_days + 1)
+    weights = (tol_days + 1 - np.abs(offsets)) / (tol_days + 1) ** 2
+    parts = []
+    for o, w in zip(offsets, weights):
+        date = pd.DatetimeIndex(proj['centre']) + pd.offsets.BDay(o)
+        known = date > proj['known_after'].to_numpy()
+        parts.append(pd.Series(w * proj['mass'][known].to_numpy(),
+                               index=pd.MultiIndex.from_arrays([date[known], proj['uspn'][known]])))
+    expected = pd.concat(parts)
+    # A spike's two triangles are a week apart and never overlap; across spikes, keep the higher probability
+    return expected.groupby(level=[0, 1]).max().reindex(index, fill_value=0.0)
+
+
 def _to_day(x) -> np.ndarray:
     return np.asarray(x, dtype="datetime64[D]")
 
