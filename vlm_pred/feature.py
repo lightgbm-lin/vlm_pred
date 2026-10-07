@@ -103,52 +103,49 @@ def enrich_earnings_schedule(df: pd.DataFrame, lags_weeks: Sequence[int] = (13, 
     gap, _ = _overnight_and_intraday(df)
     is_confirmed = is_spike & (gap.abs() / _daily_vol(df) >= gap_z)
 
-    def schedule(spikes: pd.MultiIndex) -> dict[int, pd.Series]:
-        return {lag: _earnings_schedule_prob(spikes, df.index, 7 * lag, tol_days, shift_days, shift_share)
-                for lag in lags_weeks}
+    def schedule(spikes: pd.MultiIndex) -> pd.DataFrame:
+        return _earnings_schedule_prob(spikes, df.index, lags_weeks, tol_days, shift_days, shift_share)
 
     probs = schedule(df.index[is_spike])
     probs_confirmed = schedule(df.index[is_confirmed])
 
     return pd.DataFrame({
-        f'eday_prob_{lags_weeks[0]}w': probs[lags_weeks[0]].to_numpy(),
-        'eday_prob_sum': sum(probs.values()).to_numpy(),
-        'eday_prob_gap_sum': sum(probs_confirmed.values()).to_numpy(),
+        f'eday_prob_{lags_weeks[0]}w': probs[lags_weeks[0]],
+        'eday_prob_sum': probs.sum(axis=1),
+        'eday_prob_gap_sum': probs_confirmed.sum(axis=1),
     }, index=df.index)
 
 
-def _earnings_schedule_prob(spikes: pd.MultiIndex, index: pd.MultiIndex, lag_days: int, tol_days: int,
-                            shift_days: int, shift_share: float) -> pd.Series:
-    """Triangular pmf around each spike + lag_days, with shift_share moved a week when the projection crosses Q1."""
-    s_dates = spikes.get_level_values('date')
-    centre = s_dates + pd.Timedelta(days=lag_days)
-    proj = pd.DataFrame({
-        'uspn': spikes.get_level_values('uspn'),
-        'centre': centre,
-        # A quarter's max is only known once the quarter ends
-        'known_after': s_dates.to_period('Q').end_time.normalize(),
-        'mass': 1.0,
-    })
+def _earnings_schedule_prob(spikes: pd.MultiIndex, index: pd.MultiIndex, lags_weeks: Sequence[int], tol_days: int,
+                            shift_days: int, shift_share: float) -> pd.DataFrame:
+    """Triangular pmf around each spike + lag, with shift_share moved a week when the projection crosses Q1.
 
-    # +shift_days into calendar Q1, -shift_days out of it, 0 otherwise
-    shift = shift_days * ((centre.quarter == 1).astype(int) - (s_dates.quarter == 1).astype(int))
+    One column per lag in lags_weeks, aligned to index.
+    """
+    s = spikes.to_frame(index=False).rename(columns={'date': 'spike_date'})
+    # A quarter's max is only known once the quarter ends
+    s['known_date'] = s['spike_date'].dt.to_period('Q').dt.end_time.dt.normalize()
+    s = s.merge(pd.Series(lags_weeks, name='lag'), how='cross')
+    s['centre'] = s['spike_date'] + pd.to_timedelta(7 * s['lag'], unit='D')
+    s['mass'] = 1.0
+
+    # +shift_days into calendar Q1, -shift_days out of it, decided once per centre
+    shift = shift_days * ((s['centre'].dt.quarter == 1).astype(int) - (s['spike_date'].dt.quarter == 1).astype(int))
     crosses = shift != 0
-    shifted = proj[crosses].assign(centre=proj['centre'][crosses] + pd.to_timedelta(shift[crosses], unit='D'),
-                                   mass=shift_share)
-    proj.loc[crosses, 'mass'] = 1 - shift_share
-    proj = pd.concat([proj, shifted], ignore_index=True)
+    shifted = s[crosses].assign(centre=s['centre'] + pd.to_timedelta(shift, unit='D'), mass=shift_share)
+    s.loc[crosses, 'mass'] = 1 - shift_share
+    s = pd.concat([s, shifted], ignore_index=True)
 
-    offsets = np.arange(-tol_days, tol_days + 1)
-    weights = (tol_days + 1 - np.abs(offsets)) / (tol_days + 1) ** 2
-    parts = []
-    for o, w in zip(offsets, weights):
-        date = pd.DatetimeIndex(proj['centre']) + pd.offsets.BDay(o)
-        known = date > proj['known_after'].to_numpy()
-        parts.append(pd.Series(w * proj['mass'][known].to_numpy(),
-                               index=pd.MultiIndex.from_arrays([date[known], proj['uspn'][known]])))
-    expected = pd.concat(parts)
-    # A spike's two triangles are a week apart and never overlap; across spikes, keep the higher probability
-    return expected.groupby(level=[0, 1]).max().reindex(index, fill_value=0.0)
+    # Triangular pmf over +/- tol_days business days; the center is a weekday, as lags and shifts are whole weeks
+    s = s.merge(pd.Series(np.arange(-tol_days, tol_days + 1), name='offset'), how='cross')
+    s['weight'] = s['mass'] * (tol_days + 1 - s['offset'].abs()) / (tol_days + 1) ** 2
+    s['date'] = pd.to_datetime(np.busday_offset(s['centre'].to_numpy().astype('datetime64[D]'),
+                                                s['offset'].to_numpy(), roll='forward')).astype('datetime64[ns]')
+    s = s[s['date'] > s['known_date']]
+
+    return (s.groupby(['lag', 'date', 'uspn'])['weight'].max()
+             .unstack('lag', fill_value=0.0)
+             .reindex(index=index, columns=list(lags_weeks), fill_value=0.0))
 
 
 def enrich_price_path(df: pd.DataFrame, ret_days: Sequence[int] = (20, 60), range_days: int = 252) -> pd.DataFrame:
