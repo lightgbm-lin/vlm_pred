@@ -293,6 +293,32 @@
   Q1 rule's 50/50 hedge works better than a per-stock point estimate. Lesson: per-stock timing needs several
   years of evidence (or a hedge), not one pair.
 
+### Baseline construction checks (2026-10-06, review of `vlm_pred/feature.py`; both REVERTED)
+- **z-score vol excludes the move** (`enrich_overnight_gap`): `gap_z_1`/`intra_z_1` divide t−1's move by vol
+  through t−1, which includes that move, so |z| is compressed towards 1/sqrt(EWM weight) ≈ 5.5 (99.99th pct 6.0;
+  10.3 with vol through t−2). Scaling by vol through t−2: R² 0.30331 → 0.30280 (Δ −0.00051), 2/8 years. The
+  compressed z is ≈ a monotone transform of the uncompressed one, so trees lose nothing; the difference is
+  noise. Kept the original and noted in the docstring not to use |z| with fixed cutoffs.
+- **RMS vol instead of demeaned EWM std, min_periods 10** (`enrich_vol_ewm`): with `_daily_vol` (and so
+  `gap_z_*` and the gap-confirmed spikes) also switched: R² 0.30271 (Δ −0.00060), 3/8 years. With only the
+  `vol_ewm_*` columns switched: 0.30316 (Δ −0.00015), 3/8 years. Demeaning, even at halflife 1, does not hurt
+  in practice. Not tried: dropping `vol_ewm_1` / adding a short/long vol ratio (new information, would be its own
+  hypothesis).
+- **Log returns for vol** (`enrich_vol_ewm`, and so `_daily_vol`): EWM std of log1p(ret_raw), otherwise unchanged.
+  R² 0.30328 (Δ −0.00003), 5/8 years: noise. log1p ≈ r − r²/2 only differs on large moves. (Log returns in the
+  `ret_*` columns would be a monotone transform, so identical for trees; not run.)
+- **Log-volume ratios** (`enrich_vlm_ratio`): EWM of log volume (zero-volume days skipped) minus log
+  `vlm_pred_naive`, replacing EWM(volume) / naive − 1 at the same halflives (a geometric mean, so single spike days
+  don't dominate). R² 0.30350 (Δ +0.00019), 4/8 years (2002 +.0029, 2009 +.0019; 2004 −.0030): fails the rule.
+  Not tried: log ratios *alongside* the arithmetic ones (their gap measures how spiky recent volume was).
+- **Log returns in `ret_1..ret_5`** (`enrich_lagged_ret`): log1p(ret_raw). R² 0.3033073933793766 vs
+  0.30330739337937673: identical, every year. Confirms that a monotone transform of a single feature cannot change
+  the trees (LightGBM bins by value order); don't retry for `ret_20d`/`ret_60d` or other single columns.
+- **Vol-scaled lagged returns** (`enrich_lagged_ret`): kept signed `ret_1`, replaced `ret_2..ret_5` with
+  |ret| / vol through the day before each return (`ret_absz_2..5`). R² 0.30314 (Δ −0.00017), 4/8 years (2002
+  +.0029, 2004 +.0024; 2007 −.0031, 2008 −.0027). Gain shares fell (ret_2 .0070 → ret_absz_2 .0032): the sign of
+  earlier returns, or raw size together with the vol columns, carries what the model uses. Rejected.
+
 ## Ruled out (not testable under the research rules)
 - Early-close sessions (Dec 24, Jul 3, day after Thanksgiving) and holiday-eve flags (e.g. day before
   Thanksgiving). Ruled out by the user as contextual information (exchange-schedule knowledge, not data), even
