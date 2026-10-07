@@ -38,6 +38,6 @@ def tune(wf: WalkForward, df: pd.DataFrame, target: str, weight: str, n_trials: 
         preds = dataclasses.replace(wf, model=model).run(df)
         return evaluate(preds, df[target], df[weight])['r-squared']
 
-    study = optuna.create_study(direction='maximize', sampler=optuna.samplers.TPESampler(seed=seed, n_startup_trials=5))
+    study = optuna.create_study(direction='maximize', sampler=optuna.samplers.TPESampler(seed=seed, n_startup_trials=10))
     study.optimize(objective, n_trials=n_trials)
     return study
