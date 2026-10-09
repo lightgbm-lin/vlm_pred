@@ -7,7 +7,7 @@ Run from the repo root:
     python -m vlm_pred.research.run --accept h001_name                          # add a candidate to the selected feature set
 
 The enriched frame is the training spine (date <= VAL_CUTOFF) plus the baseline features
-from vlm_pred/feature.py plus the columns of every candidate listed in candidates/selected.txt, applied in order.
+(FEATURE_FUNCS in vlm_pred/main.py) plus the columns of every candidate listed in candidates/selected.txt, applied in order.
 The VAL and OOS periods are never used here.
 """
 import argparse
@@ -23,6 +23,7 @@ from lightgbm import LGBMRegressor
 from vlm_pred.config import ROOT as REPO_ROOT
 from vlm_pred import feature
 from vlm_pred.data import load_data_df, train_test_split
+from vlm_pred.main import FEATURE_FUNCS
 from vlm_pred.metric import evaluate
 from vlm_pred.walkforward import WalkForward
 
@@ -114,24 +115,15 @@ def file_hash(*parts):
 
 
 def baseline_features(df):
-    """The baseline feature set from vlm_pred/feature.py, cached by that file's source and df's date range."""
+    """The baseline feature set (FEATURE_FUNCS in vlm_pred/main.py), cached by the functions' names and
+    source (vlm_pred/feature.py) and df's date range."""
     dates = df.index.get_level_values('date')
-    key = file_hash(Path(feature.__file__).read_text(), str(dates.min()), str(dates.max()), str(len(df)))
+    key = file_hash(Path(feature.__file__).read_text(), *[func.__name__ for func in FEATURE_FUNCS],
+                    str(dates.min()), str(dates.max()), str(len(df)))
     cache_file = CACHE / f'base_{key}.parquet'
     if cache_file.exists():
         return pd.read_parquet(cache_file), key
-    base = pd.concat([
-        feature.enrich_vlm_ratio(df),
-        feature.enrich_vol_ewm(df),
-        feature.enrich_lagged_ret(df),
-        feature.enrich_lagged_targets(df),
-        feature.enrich_max_targets(df),
-        feature.enrich_earnings_day(df),
-        feature.enrich_earnings_schedule(df),
-        feature.enrich_price_path(df),
-        feature.enrich_overnight_gap(df),
-        feature.enrich_calendar_features(df),
-    ], axis=1).astype(float)
+    base = pd.concat([func(df) for func in FEATURE_FUNCS], axis=1).astype(float)
     CACHE.mkdir(exist_ok=True)
     base.to_parquet(cache_file)
     return base, key
