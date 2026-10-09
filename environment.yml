@@ -1,0 +1,19 @@
+name: vlm_pred
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - numpy
+  - pandas=3
+  - pytables
+  - pyarrow
+  - polars
+  - tqdm
+  - statsmodels
+  - scikit-learn
+  - lightgbm=4.7
+  - optuna
+  - matplotlib
+  - notebook=6
+  - jupyter_highlight_selected_word
+  - ipywidgets
