@@ -39,6 +39,7 @@ FEATURE_FUNCS = [
 
 def build_features(df: pd.DataFrame) -> tuple[pd.DataFrame, list[str]]:
     """Add the baseline features to df. Returns the enriched df and the feature names."""
+    print(f"enriching {len(FEATURE_FUNCS)} features ...")
     features = pd.concat([func(df) for func in FEATURE_FUNCS], axis=1)
     return pd.concat([df, features], axis=1), features.columns.tolist()
 

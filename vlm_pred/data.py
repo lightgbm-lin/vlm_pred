@@ -10,6 +10,7 @@ def load_data_df():
         raise FileNotFoundError(f'{DATA_FILENAME} cannot be found. Hint: put sp500.h5 in the data/ folder at the project root')
 
     df = pd.DataFrame(pd.read_hdf(DATA_FILENAME))
+    print(f"loaded df: {df.shape} from {DATA_FILENAME}")
 
     df['vlm_pred_naive'] = calc_ewm(df, halflife=60, column='volume')
     df['y'] = (df['volume'] / df['vlm_pred_naive'].mask(df['vlm_pred_naive'] <= 0) - 1).clip(lower=-1, upper=10)
