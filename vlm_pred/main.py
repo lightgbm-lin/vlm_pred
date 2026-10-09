@@ -1,67 +1,92 @@
+"""Fit the volume model walk-forward and score it, or tune its hyperparameters.
+
+    python -m vlm_pred.main                  # score the default and tuned models, in-sample and out-of-sample
+    python -m vlm_pred.main --tune           # search hyperparameters on the in-sample dates
+    python -m vlm_pred.main --tune --n-trials 20
+
+Tuning writes trials/best.json, and scoring reads the tuned parameters from it.
+"""
+import argparse
+import json
+
 import pandas as pd
 from lightgbm import LGBMRegressor
 
-from vlm_pred.config import OOS_CUTOFF
-from vlm_pred.metric import evaluate
-from vlm_pred.walkforward import WalkForward
+from vlm_pred import feature
+from vlm_pred.config import OOS_CUTOFF, ROOT
 from vlm_pred.data import load_data_df
-from vlm_pred.feature import enrich_vlm_ratio, enrich_vol_ewm, enrich_lagged_ret, enrich_lagged_targets, \
-    enrich_max_targets, enrich_calendar_features, enrich_earnings_schedule, enrich_price_path, \
-    enrich_overnight_gap
+from vlm_pred.metric import evaluate
+from vlm_pred.tune import tune
+from vlm_pred.walkforward import WalkForward
 
+TARGET = 'y'
+MODEL_TARGET = 'y_ratio'  # y + 1, since the gamma objective needs a positive target
+WEIGHT = 'sp_weight'
+TRIALS_DIR = ROOT / 'trials'
+
+FEATURE_FUNCS = [
+    feature.enrich_vlm_ratio,
+    feature.enrich_vol_ewm,
+    feature.enrich_lagged_ret,
+    feature.enrich_lagged_targets,
+    feature.enrich_max_targets,
+    feature.enrich_calendar_features,
+    feature.enrich_earnings_schedule,
+    feature.enrich_price_path,
+    feature.enrich_overnight_gap,
+]
+
+
+def build_features(df: pd.DataFrame) -> tuple[pd.DataFrame, list[str]]:
+    """Add the baseline features to df. Returns the enriched df and the feature names."""
+    features = pd.concat([func(df) for func in FEATURE_FUNCS], axis=1)
+    return pd.concat([df, features], axis=1), features.columns.tolist()
+
+
+def make_walkforward(features: list[str], **params) -> WalkForward:
+    """Gamma LightGBM on y + 1, refit yearly on an expanding window. params override the LightGBM defaults."""
+    model = LGBMRegressor(random_state=42, verbose=-1, objective='gamma', deterministic=True,
+                          force_col_wise=True, **params)
+    return WalkForward(model=model, features=features, target=MODEL_TARGET, weight=WEIGHT, train_window=None)
+
+
+def is_out_of_sample(df: pd.DataFrame):
+    return df.index.get_level_values('date') > OOS_CUTOFF
+
+
+def report(name: str, preds: pd.Series, df: pd.DataFrame) -> None:
+    """Print the R-squared and t-stat of preds against the target, in-sample and out-of-sample."""
+    oos = is_out_of_sample(df)
+    for label, mask in [('in-sample', ~oos), ('out-of-sample', oos)]:
+        res = evaluate(preds, df[TARGET], df[WEIGHT], mask=mask)
+        print(f"{name:<8} {label:<14} R² = {res['r-squared']:.4f}   t = {res['t-stat']:.1f}")
+
+
+def run_score(df: pd.DataFrame, features: list[str]) -> None:
+    tuned_params = json.loads((TRIALS_DIR / 'best.json').read_text())['params']
+    for name, params in [('default', {}), ('tuned', tuned_params)]:
+        preds = make_walkforward(features, **params).run(df)
+        report(name, preds, df)
+
+
+def run_tune(df: pd.DataFrame, features: list[str], n_trials: int) -> None:
+    in_sample = df[~is_out_of_sample(df)]
+    study = tune(make_walkforward(features), in_sample, target=TARGET, weight=WEIGHT, n_trials=n_trials,
+                 out_dir=TRIALS_DIR)
+    print(f'best in-sample R² = {study.best_value:.4f} with {study.best_params}')
 
 
 def main():
-    data_df = load_data_df()
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument('--tune', action='store_true', help='tune hyperparameters instead of scoring')
+    parser.add_argument('--n-trials', type=int, default=100, help='number of tuning trials (default: 100)')
+    args = parser.parse_args()
 
-    baseline_funcs = [enrich_vlm_ratio, enrich_vol_ewm, enrich_lagged_ret, enrich_lagged_targets, enrich_max_targets,
-                      enrich_calendar_features, enrich_earnings_schedule, enrich_price_path, enrich_overnight_gap]
-
-    feature_dfs = []
-    for func in baseline_funcs:
-        feature_dfs.append(func(data_df))
-
-    enriched_df = pd.concat([data_df] + feature_dfs, axis=1)
-
-    from vlm_pred.data import train_test_split
-
-    train_df, val_df, test_df = train_test_split(enriched_df)
-
-    features = [c for f in feature_dfs for c in f.columns]
-    target = 'y'
-    target_ratio = 'y_ratio'
-    weight = 'sp_weight'
-
-    default_lgbm_gamma_model = LGBMRegressor(random_state=42, verbose=-1, objective='gamma', deterministic=True,
-                                     force_col_wise=True)
-    lgbm_gamma_wf = WalkForward(model=default_lgbm_gamma_model, features=features, target=target_ratio, weight=weight,
-                                train_window=None)
-    lgbm_gamma_preds = lgbm_gamma_wf.run(train_df)
-
-    ins_result = evaluate(lgbm_gamma_preds, train_df[target], train_df[weight])
-    print(ins_result)
-
-    lgbm_gamma_params = {'n_estimators': 963,
-                         'learning_rate': 0.01025674056791372,
-                         'num_leaves': 190,
-                         'min_child_samples': 35,
-                         'colsample_bytree': 0.5201068463749413,
-                         'reg_lambda': 0.01957113058068085}
-    lgbm_gamma_model = LGBMRegressor(random_state=42, verbose=-1, objective='gamma', deterministic=True,
-                                     force_col_wise=True, **lgbm_gamma_params)
-
-    lgbm_gamma_wf = WalkForward(model=lgbm_gamma_model, features=features, target=target_ratio, weight=weight,
-                                train_window=None)
-    lgbm_gamma_preds = lgbm_gamma_wf.run(enriched_df)
-
-    ins_mask = enriched_df.index.get_level_values('date') <= OOS_CUTOFF
-    ins_result = evaluate(lgbm_gamma_preds, enriched_df[target], enriched_df[weight], mask=ins_mask)
-    print(ins_result)
-
-    oos_mask = enriched_df.index.get_level_values('date') > OOS_CUTOFF
-    oos_result = evaluate(lgbm_gamma_preds, enriched_df[target], enriched_df[weight], mask=oos_mask)
-
-    print(oos_result)
+    df, features = build_features(load_data_df())
+    if args.tune:
+        run_tune(df, features, args.n_trials)
+    else:
+        run_score(df, features)
 
 
 if __name__ == '__main__':
