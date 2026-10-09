@@ -16,7 +16,7 @@ edit it, so scores stay comparable across iterations.
 ## What `run.py` does for a candidate
 
 1. Builds the training frame (dates through 2009; the VAL and OOS periods are never touched), plus the
-   baseline features from `vlm_pred/feature.py`, plus the columns of every selected candidate.
+   baseline features (`FEATURE_FUNCS` in `vlm_pred/main.py`), plus the columns of every selected candidate.
 2. Calls the candidate's `compute(df)` and checks its coverage.
 3. **Look-ahead check**: recomputes the feature on data truncated at a date T, with T's same-day market
    data scrambled, and requires identical values at T. No column is exempt: look-ahead bias is not
