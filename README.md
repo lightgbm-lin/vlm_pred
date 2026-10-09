@@ -11,7 +11,8 @@ panel of S&P 500 stocks from 2000 to 2019.
 - **Model**: LightGBM with a gamma objective on `y + 1`, weighted by `sp_weight`, fit walk-forward
   (expanding window, yearly refit).
 - **Metric**: R² of a pooled, `sp_weight`-weighted regression of `y` on the prediction (`vlm_pred/metric.py`).
-- **Split**: dates through 2014 are in-sample and are used for all research. 2015–2019 is held out.
+- **Split**: feature research uses only dates through 2009. Hyperparameter tuning uses dates through 2014.
+  2015–2019 is held out.
 
 ## Layout
 
