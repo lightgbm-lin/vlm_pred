@@ -5,6 +5,15 @@ panel of S&P 500 stocks from 2000 to 2019.
 
 ## Getting started
 
+> **All `.py` files have been renamed to `.txt`.** Rename them back before running anything. From the repo
+> root, run:
+>
+> ```bash
+> find . -name '*.txt' ! -name 'selected.txt' -not -path './.git/*' -exec sh -c 'mv "$1" "${1%.txt}.py"' _ {} \;
+> ```
+>
+> `vlm_pred/research/candidates/selected.txt` is a real text file, so the command leaves it alone.
+
 ### 1. Set up the environment first
 
 Create the conda environment from the provided [`environment.yml`](environment.yml) before running anything:
